@@ -1,6 +1,9 @@
 package com.xymq.core;
 
+import com.alibaba.fastjson.JSON;
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import com.xymq.message.Message;
+import com.xymq.protocol.Protocol;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -8,15 +11,20 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * @author 黎勇炫
@@ -27,7 +35,12 @@ import java.util.concurrent.LinkedBlockingDeque;
 @Data
 @ConfigurationProperties(prefix = "xymq")
 public class XymqServer {
-    
+
+    @Autowired
+    private ThreadPoolTaskExecutor taskExecutor;
+
+    private Logger logger = LoggerFactory.getLogger(XymqServer.class);
+
     /**
      * 服务端口号
      */
@@ -40,6 +53,10 @@ public class XymqServer {
       * 处理连接请求的工作组
       */
     private NioEventLoopGroup bossGroup = new NioEventLoopGroup();
+     /**
+       * 1对1消息队列实施轮询策略
+       */
+    private int queueIndex = 0;
     /**
      * 处理读写操作的工作组
      */
@@ -47,27 +64,27 @@ public class XymqServer {
      /**
        * 存储一对一队列消息
        */
-    private ConcurrentHashMap<String, LinkedBlockingDeque<String>> map = new ConcurrentHashMap<String, LinkedBlockingDeque<String>>();
+    private ConcurrentHashMap<String, LinkedBlockingDeque<Message>> queueContainer = new ConcurrentHashMap<String, LinkedBlockingDeque<Message>>();
      /**
        * 存储一对多消息
        */
-    private ConcurrentHashMap<String, LinkedBlockingDeque<String>> topicmap = new ConcurrentHashMap<String, LinkedBlockingDeque<String>>();
+    private ConcurrentHashMap<String, LinkedBlockingDeque<Message>> topicContainer = new ConcurrentHashMap<String, LinkedBlockingDeque<Message>>();
      /**
        * 存储延时队列消息
        */
-    private ConcurrentHashMap<String, DelayQueue<Message>> delayQueueMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, DelayQueue<Message>> delayQueueContainer = new ConcurrentHashMap<>();
      /**
        * 存储延时主题消息
        */
-    private ConcurrentHashMap<String, DelayQueue<Message>> delayTopicMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, DelayQueue<Message>> delayTopicContainer = new ConcurrentHashMap<>();
      /**
        * 队列消费者
        */
-    private ConcurrentHashMap<String, List<Channel>> sockMap = new ConcurrentHashMap<String, List<Channel>>();
+    private ConcurrentHashMap<String, List<Channel>> consumerContainer = new ConcurrentHashMap<String, List<Channel>>();
      /**
        * 在线的订阅者
        */
-    private ConcurrentHashMap<String, HashMap<Long, Channel>> topicSockMap = new ConcurrentHashMap<String, HashMap<Long, Channel>>();
+    private ConcurrentHashMap<String, HashMap<Long, Channel>> subscriberContainer = new ConcurrentHashMap<String, HashMap<Long, Channel>>();
      /**
        * 存储离线的订阅者
        */
@@ -93,7 +110,9 @@ public class XymqServer {
                     .childOption(ChannelOption.SO_KEEPALIVE,true)
                     .childHandler(new ServerInitializer());
 
-            ChannelFuture sync = server.bind(port).sync();
+            ChannelFuture sync = server.bind(port);
+            // 开始推送消息
+            sendMessageToClients();
             sync.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             throw new RuntimeException("netty服务端启动失败");
@@ -103,5 +122,64 @@ public class XymqServer {
             ioGroup.shutdownGracefully();
         }
     }
+
+    /**
+     * 发送消息到消费者
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/10
+     * @email 1677685900@qq.com
+     */
+    public void sendMessageToClients() {
+        // 异步执行，遍历队列消息容器
+        CompletableFuture.runAsync(() -> {
+            try {
+                while (!bossGroup.isShutdown()) {
+                    // 遍历整个队列容器
+                    for (Map.Entry<String, LinkedBlockingDeque<Message>> entry : queueContainer.entrySet()) {
+                        // key就是队列名
+                        String key = entry.getKey();
+                        LinkedBlockingDeque<Message> queue = entry.getValue();
+                        // 当消息队列中有数据并且该队列存在消费者，就调用线程池，负责为该队列推送消息
+                        if((queue.size() > 0 && consumerContainer.containsKey(key))){
+                            CompletableFuture.runAsync(()->{
+                                while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+                                    if (consumerContainer.get(key).size() != 0) {
+                                        Channel channel = getChannel(consumerContainer.get(key));
+                                        // 只有连接在活跃状态下才开始推送消息
+                                        if (channel.isActive()) {
+                                            // 发送消息到未断开连接的消费者
+                                            Message message = queue.poll();
+                                            byte[] content = JSON.toJSONString(message).getBytes(StandardCharsets.UTF_8);
+                                            Protocol protocol = new Protocol(content.length,content);
+                                            channel.writeAndFlush(protocol);
+                                        }
+                                    }
+                                }
+                            },taskExecutor);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("消息推送失败");
+            }
+        },taskExecutor);
+    }
+
+    /**
+     * 取模算法获取channel(一对一的队列用轮询策略)
+     * @param channels 通道列表
+     * @return io.netty.channel.Channel
+     * @author 黎勇炫
+     * @create 2022/7/10
+     * @email 1677685900@qq.com
+     */
+    private Channel getChannel(List<Channel> channels) {
+        queueIndex = queueIndex % channels.size();
+        Channel channel = channels.get(queueIndex);
+        queueIndex++;
+        return channel;
+    }
+
 
 }

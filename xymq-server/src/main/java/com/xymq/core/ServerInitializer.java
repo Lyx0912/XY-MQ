@@ -8,6 +8,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 
 /**
+ * 为netty的channel通道添加编解码器和消息处理器
  * @author 黎勇炫
  * @date 2022年07月09日 17:32
  */

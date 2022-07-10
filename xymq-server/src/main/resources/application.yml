@@ -1,9 +1,11 @@
 # 存储设置
 leveldb:
-  addr: leveldb/message.db
+  folder: leveldb/message.db
   charset: utf-8
 
 # 消息队列服务端口
 xymq:
   port: 8686
   backLog: 128
+  storage:
+    type: levelDb

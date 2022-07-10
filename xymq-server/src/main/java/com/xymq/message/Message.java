@@ -21,7 +21,7 @@ public class Message implements Delayed {
      /**
        * 消息类型(0生产者，1消费者，2签收)
        */
-    private Integer type;
+    private int type;
      /**
        * 消息内容
        */
@@ -33,7 +33,7 @@ public class Message implements Delayed {
      /**
        * 消息的目的地(队列或频道)
        */
-    private Integer destinationType;
+    private int destinationType;
      /**
        * 是否插队消息
        */
@@ -51,7 +51,7 @@ public class Message implements Delayed {
        */
     private long delay;
 
-    public Message(Long messageId, Integer type, String content, String destination,  Integer destinationType, boolean isTopPriority,long delay,TimeUnit timeUnit) {
+    public Message(Long messageId, int type, String content, String destination,  int destinationType, boolean isTopPriority,long delay,TimeUnit timeUnit) {
         this.messageId = messageId;
         this.type = type;
         this.content = content;
@@ -78,11 +78,11 @@ public class Message implements Delayed {
         this.messageId = messageId;
     }
 
-    public Integer getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(Integer type) {
+    public void setType(int type) {
         this.type = type;
     }
 
@@ -102,11 +102,11 @@ public class Message implements Delayed {
         this.destination = destination;
     }
 
-    public Integer getDestinationType() {
+    public int getDestinationType() {
         return destinationType;
     }
 
-    public void setDestinationType(Integer destinationType) {
+    public void setDestinationType(int destinationType) {
         this.destinationType = destinationType;
     }
 
