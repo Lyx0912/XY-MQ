@@ -3,7 +3,7 @@ package com.xymq_cli.execution;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.MessageConstant;
 import com.xymq_cli.core.XymqServer;
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -94,7 +94,7 @@ public class ConsumerExec implements Execution{
     private void addConsumer(Message message, Channel channel) {
         ConcurrentHashMap<String, List<Channel>> consumerContainer = xymqServer.getConsumerContainer();
         // 如果存在这个容器就直接将channel存入容器，否则就新建一个容器
-        if (xymqServer.getQueueContainer().containsKey(message.getDestination())) {
+        if (consumerContainer.containsKey(message.getDestination())) {
             consumerContainer.get(message.getDestination()).add(channel);
         } else {
             // 新建容器后存入

@@ -1,8 +1,8 @@
 package com.xymq_cli.client;
 
 import com.xymq_cli.handler.ConsumerHandler;
-import com.xymq_cli.protocol.MessageDecoder;
-import com.xymq_cli.protocol.MessageEncoder;
+import com.xymq_common.protocol.MessageDecoder;
+import com.xymq_common.protocol.MessageEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;

@@ -1,14 +1,13 @@
 package com.xymq_cli.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.xymq_cli.client.Consumer;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.MessageType;
 import com.xymq_cli.listener.MessageData;
 import com.xymq_cli.listener.MessageListener;
-import com.xymq_cli.message.Message;
-import com.xymq_cli.protocol.Protocol;
 import com.xymq_cli.util.Message2Byte;
+import com.xymq_common.message.Message;
+import com.xymq_common.protocol.Protocol;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -58,9 +57,11 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
     protected void channelRead0(ChannelHandlerContext ctx, Protocol protocol) throws Exception {
         // 将字节数组转换成消息对象
         Message message = Message2Byte.reverse(protocol.getContent());
-        execListener(new MessageData(this,message.getContent()));
-        if(isAutoAcknowledge){
-            ack(ctx.channel(), message.getMessageId(), message.getDestination());
+        if(message != null){
+            execListener(new MessageData(this,message.getContent()));
+            if(isAutoAcknowledge){
+                ack(ctx.channel(), message.getMessageId(), message.getDestination());
+            }
         }
     }
 
@@ -75,6 +76,14 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
      * @email 1677685900@qq.com
      */
     private void ack(Channel channel, Long messageId, String destination) {
+//        Message message = new Message(messageId, MessageType.ACK.getType(), null,destination, Destination.TOPIC.getDestination(),false,0,TimeUnit.MILLISECONDS);
+//        String msg = JSON.toJSONString(messageBean);
+//        ByteBuffer byteBuffer =ByteBuffer.allocate(4+ByteBufferUtils.getByteSize(msg));
+//        byteBuffer.putInt(ByteBufferUtils.getByteSize(msg));
+//        byteBuffer.put(msg.getBytes());
+//        byteBuffer.flip();
+//        //发送至服务端
+//        channel.writeAndFlush();
     }
 
     /**
@@ -125,5 +134,18 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
        */
     public void setAutoAcknowledge(boolean autoAcknowledge){
         this.isAutoAcknowledge = autoAcknowledge;
+    }
+
+     /**
+       * 获取消息监听器
+       */
+    public MessageListener getMessageListener(){
+        return this.messageListener;
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.out.println("关闭与服务端的连接");
+        ctx.channel().close();
     }
 }

@@ -1,7 +1,7 @@
 package com.xymq_cli.util;
 
 import com.alibaba.fastjson.JSON;
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 
 import java.nio.charset.StandardCharsets;
 

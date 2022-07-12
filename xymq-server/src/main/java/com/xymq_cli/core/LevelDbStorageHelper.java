@@ -1,6 +1,6 @@
 package com.xymq_cli.core;
 
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

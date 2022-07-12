@@ -3,18 +3,14 @@ package com.xymq_cli.client;
 import com.xymq_cli.handler.ConsumerHandler;
 import com.xymq_cli.listener.MessageData;
 import com.xymq_cli.listener.MessageListener;
-import com.xymq_cli.message.Message;
 import com.xymq_cli.util.ResourceUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * @author 黎勇炫
@@ -34,6 +30,10 @@ public class Consumer {
        */
     private ConsumerHandler consumerHandler;
      /**
+       * 当前消费者的通道
+       */
+    private Channel channel;
+     /**
        * 日志信息
        */
     private Logger logger = LoggerFactory.getLogger(Consumer.class);
@@ -52,16 +52,14 @@ public class Consumer {
      */
     public Consumer(String destination) {
         consumerHandler = new ConsumerHandler(destination);
-        try {
-            run();
-        }catch (Exception e){
-            logger.error("消费者初始化异常");
-            e.printStackTrace();
-        }
     }
 
     private void run() {
 
+        // 检测消息监听器是否已经启动
+        if(this.consumerHandler.getMessageListener() == null){
+            throw new NullPointerException("未设置消息监听器");
+        }
         NioEventLoopGroup clientGroup = new NioEventLoopGroup();
 
         try{
@@ -72,27 +70,51 @@ public class Consumer {
 
             // 连接服务器
             ChannelFuture sync = bootstrap.connect(host, port).sync();
+            this.channel = sync.channel();
             // 监听关闭连接
             sync.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-
+            // 关闭工作组
+            clientGroup.shutdownGracefully();
         }
     }
 
      /**
-       * 设置自动签名
-       */
+      * 设置自动签名
+      * @param autoAcknowledge 设置自动签名
+      * @return void
+      * @author 黎勇炫
+      * @create 2022/7/12
+      * @email 1677685900@qq.com
+      */
     public void setAutoAcknowledge(boolean autoAcknowledge){
         this.consumerHandler.setAutoAcknowledge(autoAcknowledge);
     }
 
      /**
-       * 设置监听器
-       */
-    public void createListener(MessageListener listener){
+      * 设置监听器
+      * @param listener 监听器
+      * @return com.xymq_cli.client.Consumer
+      * @author 黎勇炫
+      * @create 2022/7/12
+      * @email 1677685900@qq.com
+      */
+    public Consumer createListener(MessageListener listener){
         this.consumerHandler.createListener(listener);
+        return this;
+    }
+
+     /**
+      * 关闭通道
+      * @return void
+      * @author 黎勇炫
+      * @create 2022/7/12
+      * @email 1677685900@qq.com
+      */
+    public void close(){
+        this.channel.close();
     }
 
     public static void main(String[] args) {
@@ -102,6 +124,6 @@ public class Consumer {
             public void getMessage(MessageData data) {
                 System.out.println(data.getMessage());
             }
-        });
+        }).run();
     }
 }

@@ -1,4 +1,4 @@
-package com.xymq_cli.protocol;
+package com.xymq_common.protocol;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;

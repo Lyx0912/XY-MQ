@@ -1,6 +1,6 @@
 package com.xymq_cli.execution;
 
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 import io.netty.channel.Channel;
 
 /**

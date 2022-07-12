@@ -24,8 +24,8 @@ public class BootListener implements ApplicationListener<ApplicationEvent> {
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if(event instanceof ApplicationReadyEvent){
-            xymqServer.init();
             levelDb.initLevelDb();
+            xymqServer.init();
         }
     }
 }

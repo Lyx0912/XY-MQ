@@ -1,10 +1,10 @@
 package com.xymq_cli.handler;
 
-import com.xymq_cli.message.Message;
-import com.xymq_cli.protocol.Protocol;
+import com.xymq_common.message.Message;
 import com.xymq_cli.execution.Execution;
 import com.xymq_cli.execution.ExecutionFactory;
 import com.xymq_cli.util.Message2Byte;
+import com.xymq_common.protocol.Protocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
@@ -24,7 +24,6 @@ public class MessageHandler extends SimpleChannelInboundHandler<Protocol> {
     protected void channelRead0(ChannelHandlerContext ctx, Protocol protocol) throws Exception {
         // 将字节数组转换成消息对象
         Message msg = Message2Byte.reverse(protocol.getContent());
-        System.out.println(msg);
         // 判断是消费者还是消息推送者，如果是消费者就将channel保存到容器，如果是推送者就将消息存储到对应的队列中,如果是签收消息就将消息在leveldb中移除
         Execution execution = ExecutionFactory.getStrategy(msg.getType());
         execution.exec(msg,ctx.channel());
@@ -41,7 +40,7 @@ public class MessageHandler extends SimpleChannelInboundHandler<Protocol> {
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error("客户端{}断开连接",ctx.channel().remoteAddress());
+        log.error("客户端{}断开连接---原因:{}",ctx.channel().remoteAddress(),cause.getMessage());
         ctx.channel().close();
     }
 }

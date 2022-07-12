@@ -1,4 +1,4 @@
-package com.xymq_cli.message;
+package com.xymq_common.message;
 
 /**
  * @author 黎勇炫

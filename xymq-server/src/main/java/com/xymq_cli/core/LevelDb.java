@@ -5,9 +5,12 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.xymq_cli.constant.ServerConstant;
 import com.xymq_cli.exception.ExceptionEnum;
 import com.xymq_cli.exception.XyException;
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
+import io.netty.channel.Channel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBFactory;
 import org.iq80.leveldb.DBIterator;
@@ -215,7 +218,7 @@ public class LevelDb {
     public void storeOffLineSubscriber(ConcurrentHashMap<String, HashMap<Long, SocketChannel>> offLineSubscriber) {
         if(null != db){
             try {
-                byte[] key = "offLineSubscriber".getBytes(charset);
+                byte[] key = ServerConstant.OFFLINE_SUBSCRIBER.getBytes(charset);
                 byte[] value = JSON.toJSONBytes(offLineSubscriber, new SerializerFeature[]{SerializerFeature.DisableCircularReferenceDetect});
                 db.put(key, value);
             } catch (UnsupportedEncodingException e) {
@@ -238,7 +241,7 @@ public class LevelDb {
     public void storeOffLineMessage(ConcurrentHashMap<Long, ArrayList<String>> storeOffLineTopicMessage) {
         if (null != db) {
             try {
-                byte[] key = "offLineTopicMessage".getBytes(charset);
+                byte[] key = ServerConstant.OFFLINE_MESSAGE_TOPIC.getBytes(charset);
                 byte[] value = JSON.toJSONBytes(storeOffLineTopicMessage, new SerializerFeature[]{SerializerFeature.DisableCircularReferenceDetect});
                 db.put(key, value);
             } catch (UnsupportedEncodingException e) {
@@ -255,25 +258,25 @@ public class LevelDb {
      * @create 2022/7/10
      * @email 1677685900@qq.com
      */
-    public ConcurrentHashMap<String, HashMap<Long, SocketChannel>> getOffLineSubscriber() {
+    public ConcurrentHashMap<String, HashMap<Long, Channel>> getOffLineSubscriber() {
         ConcurrentHashMap<String, JSONObject> hashMap = null;
-        ConcurrentHashMap<String, HashMap<Long, SocketChannel>> realHashMap = null;
+        ConcurrentHashMap<String, HashMap<Long, Channel>> realHashMap = null;
         try {
-            byte[] key = "offLineSubscriber".getBytes(charset);
+            byte[] key = ServerConstant.OFFLINE_SUBSCRIBER.getBytes(charset);
             byte[] value = db.get(key);
             hashMap = JSON.parseObject(new String(value), ConcurrentHashMap.class);
             if (null != hashMap) {
-                realHashMap = new ConcurrentHashMap<String, HashMap<Long, SocketChannel>>();
+                realHashMap = new ConcurrentHashMap<String, HashMap<Long, Channel>>();
                 for (Map.Entry<String, JSONObject> entry : hashMap.entrySet()) {
                     String str = entry.getValue().toString();
                     HashMap<Long, JSONObject> subscribers = JSON.parseObject(str, HashMap.class);
-                    HashMap<Long, SocketChannel> newSubscribers = new HashMap<Long, SocketChannel>();
+                    HashMap<Long, Channel> newSubscribers = new HashMap<Long, Channel>();
                     for (Map.Entry<Long, JSONObject> longJSONObjectEntry : subscribers.entrySet()) {
                         String longString = String.valueOf(longJSONObjectEntry.getKey());
                         String socketString = longJSONObjectEntry.getValue().toString();
                         Long clientId = Long.valueOf(longString);
-                        SocketChannel socketChannel = JSON.parseObject(socketString, SocketChannel.class);
-                        newSubscribers.put(clientId, socketChannel);
+                        Channel channel = JSON.parseObject(socketString, NioSocketChannel.class);
+                        newSubscribers.put(clientId, channel);
                     }
                     realHashMap.put(entry.getKey(), newSubscribers);
                 }
@@ -296,7 +299,7 @@ public class LevelDb {
         ConcurrentHashMap<Integer, JSONArray> hashMap = null;
         ConcurrentHashMap<Long, ArrayList<String>> realData = null;
         try {
-            byte[] key = "offLineTopicMessage".getBytes(charset);
+            byte[] key = ServerConstant.OFFLINE_MESSAGE_TOPIC.getBytes(charset);
             byte[] value = db.get(key);
             hashMap = JSON.parseObject(new String(value), ConcurrentHashMap.class);
             if (null != hashMap) {

@@ -4,7 +4,7 @@ import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.MessageConstant;
 import com.xymq_cli.core.StorageHelper;
 import com.xymq_cli.core.XymqServer;
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 import com.xymq_cli.util.SnowflakeIdUtils;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;

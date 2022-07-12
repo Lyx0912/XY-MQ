@@ -2,7 +2,7 @@ package com.xymq_cli.execution;
 
 import com.xymq_cli.constant.MessageConstant;
 import com.xymq_cli.core.LevelDb;
-import com.xymq_cli.message.Message;
+import com.xymq_common.message.Message;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
