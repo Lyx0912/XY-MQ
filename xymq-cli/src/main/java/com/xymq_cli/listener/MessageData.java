@@ -7,7 +7,9 @@ import java.util.EventObject;
  * @date 2022年07月11日 15:19
  */
 public class MessageData extends EventObject {
-    //消息内容
+     /**
+       * 消息内容
+       */
     private String message;
 
 
@@ -20,9 +22,9 @@ public class MessageData extends EventObject {
         this.message = message;
     }
 
-    /*
-     * 返回消息内容
-     * */
+     /**
+       * 返回消息内容
+       */
     public String getMessage(){
         return message;
     }

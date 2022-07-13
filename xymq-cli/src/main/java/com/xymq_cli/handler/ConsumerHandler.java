@@ -76,14 +76,10 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
      * @email 1677685900@qq.com
      */
     private void ack(Channel channel, Long messageId, String destination) {
-//        Message message = new Message(messageId, MessageType.ACK.getType(), null,destination, Destination.TOPIC.getDestination(),false,0,TimeUnit.MILLISECONDS);
-//        String msg = JSON.toJSONString(messageBean);
-//        ByteBuffer byteBuffer =ByteBuffer.allocate(4+ByteBufferUtils.getByteSize(msg));
-//        byteBuffer.putInt(ByteBufferUtils.getByteSize(msg));
-//        byteBuffer.put(msg.getBytes());
-//        byteBuffer.flip();
-//        //发送至服务端
-//        channel.writeAndFlush();
+        Message message = new Message(messageId, MessageType.ACK.getType(), null,destination, Destination.TOPIC.getDestination(),false,0,TimeUnit.MILLISECONDS);
+        byte[] content = JSON.toJSONString(message).getBytes(StandardCharsets.UTF_8);
+        Protocol protocol = new Protocol(content.length,content);
+        channel.writeAndFlush(protocol);
     }
 
     /**
