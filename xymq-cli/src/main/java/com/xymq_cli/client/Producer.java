@@ -1,7 +1,13 @@
 package com.xymq_cli.client;
 
+import com.xymq_cli.handler.ProducerHandler;
 import com.xymq_cli.util.ResourceUtils;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +29,11 @@ public class Producer {
     /**
      * 生产者处理器
      */
-    private ChannelHandler consumerHandler;
+    private ProducerHandler producerHandler;
+     /**
+       * 客户端通道
+       */
+    private Channel channel;
     /**
      * 日志
      */
@@ -37,39 +47,37 @@ public class Producer {
     /**
      * 初始化生产者
      *
-     * @param address
-     * @param port
      * @return
      * @author 黎勇炫
      * @create 2022/7/13
      * @email 1677685900@qq.com
      */
-    public Producer(String address, Integer port) {
-//        // 检测消息监听器是否已经启动
-//        NioEventLoopGroup clientGroup = new NioEventLoopGroup();
-//
-//        try{
-//            Bootstrap bootstrap = new Bootstrap();
-//            bootstrap.group(clientGroup)
-//                    .channel(NioSocketChannel.class)
-//                    .handler(new ConsumerlInitializer(consumerHandler));
-//
-//            // 连接服务器
-//            ChannelFuture sync = bootstrap.connect(host, port).sync();
-//            this.channel = sync.channel();
-//            // 监听关闭连接
-//            sync.channel().closeFuture().sync();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } finally {
-//            // 关闭工作组
-//            clientGroup.shutdownGracefully();
-//        }
+    public Producer() {
+        producerHandler = new ProducerHandler();
+        NioEventLoopGroup clientGroup = new NioEventLoopGroup();
+
+        try{
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(clientGroup)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ProducerlInitializer(producerHandler));
+
+            // 连接服务器
+            ChannelFuture sync = bootstrap.connect(host, port).sync();
+            this.channel = sync.channel();
+            // 监听关闭连接
+            sync.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭工作组
+            clientGroup.shutdownGracefully();
+        }
     }
 
-    /*
-     * 发送队列消息，需要传入消息内容以及队列名称
-     * */
+     /**
+       * 发送队列消息，需要传入消息内容以及队列名称
+       */
     public void sendMsg(String content, String destinationName) {
 //        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName,DestinationType.QUEUE.getType(), false,0, TimeUnit.SECONDS);
 //        String message = JSON.toJSONString(messageBean);
