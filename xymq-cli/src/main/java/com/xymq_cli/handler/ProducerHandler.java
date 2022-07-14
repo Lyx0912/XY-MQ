@@ -19,7 +19,7 @@ public class ProducerHandler extends SimpleChannelInboundHandler<Protocol> {
     }
 
      /**
-       * 
+       * 向服务器注册自己
        */
     private void register() {
     }

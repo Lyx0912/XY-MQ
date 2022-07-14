@@ -19,7 +19,6 @@
         <java.version>1.8</java.version>
         <leveldb.version>0.12</leveldb.version>
         <protobuf.version>3.19.4</protobuf.version>
-        <json.version>1.2.76</json.version>
     </properties>
 
     <dependencies>
@@ -28,12 +27,6 @@
             <groupId>com.xymq</groupId>
             <artifactId>xymq-common</artifactId>
             <version>0.0.1</version>
-        </dependency>
-        <!--json依赖-->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>${json.version}</version>
         </dependency>
         <!--leveldb-->
         <dependency>

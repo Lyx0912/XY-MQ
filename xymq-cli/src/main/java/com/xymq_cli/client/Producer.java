@@ -1,7 +1,12 @@
 package com.xymq_cli.client;
 
+import com.xymq_cli.constant.Destination;
+import com.xymq_cli.constant.MessageType;
 import com.xymq_cli.handler.ProducerHandler;
 import com.xymq_cli.util.ResourceUtils;
+import com.xymq_common.message.Message;
+import com.xymq_common.protocol.MessageUtils;
+import com.xymq_common.protocol.Protocol;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -79,17 +84,9 @@ public class Producer {
        * 发送队列消息，需要传入消息内容以及队列名称
        */
     public void sendMsg(String content, String destinationName) {
-//        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName,DestinationType.QUEUE.getType(), false,0, TimeUnit.SECONDS);
-//        String message = JSON.toJSONString(messageBean);
-//        ByteBuffer buffer = ByteBuffer.allocate(4+ ByteBufferUtils.getByteSize(message));
-//        buffer.putInt(ByteBufferUtils.getByteSize(message));
-//        buffer.put(message.getBytes());
-//        buffer.flip();
-//        try {
-//            socketChannel.write(buffer);
-//        } catch (IOException e) {
-//            logger.error("Write buffer failed");
-//        }
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName, Destination.QUEUE.getDestination(), false,0, TimeUnit.SECONDS);
+        Protocol protocol = MessageUtils.message2Protocol(message);
+        channel.writeAndFlush(protocol);
     }
 
     /*

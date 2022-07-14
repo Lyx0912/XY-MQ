@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.ServerConstant;
 import com.xymq_common.message.Message;
+import com.xymq_common.protocol.MessageUtils;
 import com.xymq_common.protocol.Protocol;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -151,8 +152,7 @@ public class XymqServer {
                                         if (channel.isActive()) {
                                             // 发送消息到未断开连接的消费者
                                             Message message = queue.poll();
-                                            byte[] content = JSON.toJSONString(message).getBytes(StandardCharsets.UTF_8);
-                                            Protocol protocol = new Protocol(content.length,content);
+                                            MessageUtils.message2Protocol(message)
                                             channel.writeAndFlush(protocol);
                                         }
                                     }

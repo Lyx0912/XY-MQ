@@ -14,6 +14,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <netty.version>4.1.20.Final</netty.version>
+        <json.version>1.2.76</json.version>
     </properties>
 
     <dependencies>
@@ -23,6 +24,12 @@
             <artifactId>netty-all</artifactId>
             <version>${netty.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <!--json依赖-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${json.version}</version>
         </dependency>
     </dependencies>
 

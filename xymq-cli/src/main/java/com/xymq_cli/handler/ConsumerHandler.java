@@ -5,8 +5,8 @@ import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.MessageType;
 import com.xymq_cli.listener.MessageData;
 import com.xymq_cli.listener.MessageListener;
-import com.xymq_cli.util.Message2Byte;
 import com.xymq_common.message.Message;
+import com.xymq_common.protocol.MessageUtils;
 import com.xymq_common.protocol.Protocol;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -56,7 +56,7 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Protocol protocol) throws Exception {
         // 将字节数组转换成消息对象
-        Message message = Message2Byte.reverse(protocol.getContent());
+        Message message = MessageUtils.reverse(protocol.getContent());
         if(message != null){
             execListener(new MessageData(this,message.getContent()));
             if(isAutoAcknowledge){

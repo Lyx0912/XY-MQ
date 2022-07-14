@@ -1,4 +1,4 @@
-package com.xymq_cli.util;
+package com.xymq_common.protocol;
 
 import com.alibaba.fastjson.JSON;
 import com.xymq_common.message.Message;
@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
  * @author 黎勇炫
  * @date 2022年07月09日 17:55
  */
-public class Message2Byte {
+public class MessageUtils {
 
     /**
      * 将消息内容转换成字节数组
@@ -33,5 +33,11 @@ public class Message2Byte {
      */
     public static Message reverse(byte[] bytes){
         return JSON.parseObject(new String(bytes,StandardCharsets.UTF_8),Message.class);
+    }
+
+    public static Protocol message2Protocol(Message message){
+        byte[] content = JSON.toJSONString(message).getBytes(StandardCharsets.UTF_8);
+        Protocol protocol = new Protocol(content.length,content);
+        return protocol;
     }
 }
