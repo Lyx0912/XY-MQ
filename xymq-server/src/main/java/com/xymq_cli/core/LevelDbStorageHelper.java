@@ -77,7 +77,16 @@ public class LevelDbStorageHelper implements StorageHelper{
      */
     @Override
     public void storeDelayMessage(ConcurrentHashMap<String, DelayQueue<Message>> delayQueueMap, Message message) {
-
+        // 存储消息之前先确认是否已经创建容器
+        String destination = message.getDestination();
+        if(delayQueueMap.containsKey(destination)){
+            delayQueueMap.get(destination).offer(message);
+        }else {
+            DelayQueue<Message> delayQueue = new DelayQueue<>();
+            // 插入消息
+            delayQueue.offer(message);
+            delayQueueMap.put(destination, delayQueue);
+        }
     }
 
     /**

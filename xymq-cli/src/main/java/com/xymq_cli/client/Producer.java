@@ -10,7 +10,6 @@ import com.xymq_common.protocol.Protocol;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
@@ -35,9 +34,9 @@ public class Producer {
      * 生产者处理器
      */
     private ProducerHandler producerHandler;
-     /**
-       * 客户端通道
-       */
+    /**
+     * 客户端通道
+     */
     private Channel channel;
     /**
      * 日志
@@ -61,7 +60,7 @@ public class Producer {
         producerHandler = new ProducerHandler();
         NioEventLoopGroup clientGroup = new NioEventLoopGroup();
 
-        try{
+        try {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(clientGroup)
                     .channel(NioSocketChannel.class)
@@ -70,40 +69,36 @@ public class Producer {
             // 连接服务器
             ChannelFuture sync = bootstrap.connect(host, port).sync();
             this.channel = sync.channel();
-            // 监听关闭连接
-            sync.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            // 关闭工作组
             clientGroup.shutdownGracefully();
+            e.printStackTrace();
         }
     }
 
-     /**
-       * 发送队列消息，需要传入消息内容以及队列名称
-       */
+    /**
+     * 发送队列消息，需要传入消息内容以及队列名称
+     */
     public void sendMsg(String content, String destinationName) {
-        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName, Destination.QUEUE.getDestination(), false,0, TimeUnit.SECONDS);
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content, destinationName, Destination.QUEUE.getDestination(), false, 0, TimeUnit.SECONDS);
         Protocol protocol = MessageUtils.message2Protocol(message);
         channel.writeAndFlush(protocol);
     }
 
-    /*
+    /**
      * 发送延时消息，需要传入消息内容、队列名称、延迟数以及延迟单位
-     * */
+     *
+     * @param content         消息内容
+     * @param destinationName 目的地
+     * @param delay           延迟数
+     * @param timeUnit        延迟单位
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/16
+     * @email 1677685900@qq.com
+     */
     public void sendDelayMessage(String content, String destinationName, long delay, TimeUnit timeUnit) {
-//        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName,DestinationType.QUEUE.getType(), false,delay, timeUnit);
-//        String message = JSON.toJSONString(messageBean);
-//        ByteBuffer buffer = ByteBuffer.allocate(4+ ByteBufferUtils.getByteSize(message));
-//        buffer.putInt(ByteBufferUtils.getByteSize(message));
-//        buffer.put(message.getBytes());
-//        buffer.flip();
-//        try {
-//            socketChannel.write(buffer);
-//        } catch (IOException e) {
-//            logger.error("Write buffer failed");
-//        }
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName,Destination.QUEUE.getDestination(), false,delay, timeUnit);
+        this.channel.writeAndFlush(MessageUtils.message2Protocol(message));
     }
 
     /**
@@ -194,7 +189,15 @@ public class Producer {
      * @email 1677685900@qq.com
      */
     public void close() {
-
+        // 关闭工作组
+        this.channel.close();
     }
 
+
+    public static void main(String[] args) {
+        Producer producer = new Producer();
+        for (int i = 0; i < 10; i++) {
+            producer.sendDelayMessage("你好", "queue",5,TimeUnit.SECONDS);
+        }
+    }
 }
