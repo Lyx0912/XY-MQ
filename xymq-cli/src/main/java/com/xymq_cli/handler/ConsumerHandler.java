@@ -35,6 +35,7 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
        * 自动签名(默认开启)
        */
     private boolean isAutoAcknowledge = true;
+
     /**
      * 日志信息
      */

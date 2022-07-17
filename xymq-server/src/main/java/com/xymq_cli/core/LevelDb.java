@@ -238,7 +238,7 @@ public class LevelDb {
      * @create 2022/7/10
      * @email 1677685900@qq.com
      */
-    public void storeOffLineMessage(ConcurrentHashMap<Long, ArrayList<String>> storeOffLineTopicMessage) {
+    public void storeOffLineMessage(ConcurrentHashMap<Long, ArrayList<Message>> storeOffLineTopicMessage) {
         if (null != db) {
             try {
                 byte[] key = ServerConstant.OFFLINE_MESSAGE_TOPIC.getBytes(charset);
@@ -295,25 +295,25 @@ public class LevelDb {
      * @create 2022/7/10
      * @email 1677685900@qq.com
      */
-    public ConcurrentHashMap<Long, ArrayList<String>> getOffLineMessage() {
+    public ConcurrentHashMap<Long, ArrayList<Message>> getOffLineMessage() {
         ConcurrentHashMap<Integer, JSONArray> hashMap = null;
-        ConcurrentHashMap<Long, ArrayList<String>> realData = null;
+        ConcurrentHashMap<Long, ArrayList<Message>> realData = null;
         try {
             byte[] key = ServerConstant.OFFLINE_MESSAGE_TOPIC.getBytes(charset);
             byte[] value = db.get(key);
             hashMap = JSON.parseObject(new String(value), ConcurrentHashMap.class);
             if (null != hashMap) {
-                realData = new ConcurrentHashMap<Long, ArrayList<String>>();
+                realData = new ConcurrentHashMap<Long, ArrayList<Message>>();
                 for (Map.Entry<Integer, JSONArray> hashMapEntry : hashMap.entrySet()) {
                     Long clientId = Long.valueOf(hashMapEntry.getKey());
                     JSONArray jsonObject = hashMapEntry.getValue();
-                    ArrayList<String> arrayList = JSON.parseObject(jsonObject.toString(), ArrayList.class);
+                    ArrayList<Message> arrayList = JSON.parseObject(jsonObject.toString(), ArrayList.class);
                     realData.put(clientId, arrayList);
                 }
             }
         } catch (UnsupportedEncodingException e) {
             logger.error("离线消息读取失败");
-            throw new XyException(ExceptionEnum.FAILED_TO_RECOVERY_DATA);
+            e.printStackTrace();
         }
         return realData;
     }

@@ -1,5 +1,6 @@
 package com.xymq_cli.client;
 
+import com.xymq_cli.client.initializer.ProducerlInitializer;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.MessageType;
 import com.xymq_cli.handler.ProducerHandler;

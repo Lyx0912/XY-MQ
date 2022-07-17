@@ -1,4 +1,4 @@
-package com.xymq_cli.client;
+package com.xymq_cli.client.initializer;
 
 import com.xymq_cli.handler.ProducerHandler;
 import com.xymq_common.protocol.MessageDecoder;
@@ -19,6 +19,14 @@ public class ProducerlInitializer extends ChannelInitializer<SocketChannel> {
         this.producerHandler = producerHandler;
     }
 
+    /**
+     * 该方法主要是为客户端channel设置编解码器以及消息处理器
+     * @param sc netty通道
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/11
+     * @email 1677685900@qq.com
+     */
     @Override
     protected void initChannel(SocketChannel sc) throws Exception {
         ChannelPipeline pipeline = sc.pipeline();

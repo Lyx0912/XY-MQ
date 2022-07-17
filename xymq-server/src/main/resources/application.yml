@@ -9,3 +9,8 @@ xymq:
   backLog: 128
   storage:
     type: levelDb
+# thread: 推送消息的线程池配置
+#   corePoolSize: 75
+#   maxPoolSize: 200
+#   queueCapacity: 1000
+#   keepAliveSeconds: 300

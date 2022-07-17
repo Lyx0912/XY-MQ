@@ -1,4 +1,4 @@
-package com.xymq_cli.client;
+package com.xymq_cli.client.initializer;
 
 import com.xymq_cli.handler.ConsumerHandler;
 import com.xymq_common.protocol.MessageDecoder;

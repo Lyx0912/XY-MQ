@@ -62,7 +62,25 @@ public class LevelDbStorageHelper implements StorageHelper{
      */
     @Override
     public void storeTopicMessage(ConcurrentHashMap<String, LinkedBlockingDeque<Message>> topicContainer, Message message) {
-
+        // 消息目的地
+        String destination = message.getDestination();
+        // 如果已经存在这个目的地了就直接存入
+        if (topicContainer.containsKey(destination)) {
+            if (message.getIsTopPriority()) {
+                topicContainer.get(destination).offerFirst(message);
+            } else {
+                topicContainer.get(destination).offer(message);
+            }
+        } else {
+            // 不存在就新建后存入
+            topicContainer.put(destination, new LinkedBlockingDeque<>());
+            if (!message.getIsTopPriority()) {
+                topicContainer.get(destination).offer(message);
+            } else {
+                topicContainer.get(destination).offerFirst(message);
+            }
+        }
+        levelDb.putMessage(message.getMessageId(), message);
     }
 
     /**

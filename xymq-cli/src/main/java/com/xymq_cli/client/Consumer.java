@@ -1,5 +1,6 @@
 package com.xymq_cli.client;
 
+import com.xymq_cli.client.initializer.ConsumerlInitializer;
 import com.xymq_cli.handler.ConsumerHandler;
 import com.xymq_cli.listener.MessageData;
 import com.xymq_cli.listener.MessageListener;
@@ -60,11 +61,11 @@ public class Consumer {
         if(this.consumerHandler.getMessageListener() == null){
             throw new NullPointerException("未设置消息监听器");
         }
-        NioEventLoopGroup clientGroup = new NioEventLoopGroup();
+        NioEventLoopGroup clientGroupC = new NioEventLoopGroup();
 
         try{
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(clientGroup)
+            bootstrap.group(clientGroupC)
                     .channel(NioSocketChannel.class)
                     .handler(new ConsumerlInitializer(consumerHandler));
 
@@ -77,7 +78,7 @@ public class Consumer {
             e.printStackTrace();
         } finally {
             // 关闭工作组
-            clientGroup.shutdownGracefully();
+            clientGroupC.shutdownGracefully();
         }
     }
 
