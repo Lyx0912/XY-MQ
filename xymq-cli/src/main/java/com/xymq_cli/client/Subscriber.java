@@ -3,6 +3,7 @@ package com.xymq_cli.client;
 import com.xymq_cli.client.initializer.SubscriberInitializer;
 import com.xymq_cli.handler.ConsumerHandler;
 import com.xymq_cli.handler.SubscriberHandler;
+import com.xymq_cli.listener.MessageData;
 import com.xymq_cli.listener.MessageListener;
 import com.xymq_cli.util.ResourceUtils;
 import io.netty.bootstrap.Bootstrap;
@@ -95,5 +96,15 @@ public class Subscriber {
     public Subscriber createListener(MessageListener listener){
         this.subscriberHandler.createListener(listener);
         return this;
+    }
+
+    public static void main(String[] args) {
+        Subscriber subscriber = new Subscriber("topic",1);
+        subscriber.createListener(new MessageListener() {
+            @Override
+            public void getMessage(MessageData data) {
+                System.out.println(data.getMessage());
+            }
+        }).run();
     }
 }

@@ -104,8 +104,7 @@ public class Producer {
 
     /**
      * 发布主题消息，需要传入消息内容和主题名称
-     *
-     * @param content         消息内容
+     * @param content    消息内容
      * @param destinationName i
      * @return void
      * @author 黎勇炫
@@ -113,17 +112,8 @@ public class Producer {
      * @email 1677685900@qq.com
      */
     public void publish(String content, String destinationName) {
-//        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName,DestinationType.TOPIC.getType(),false,0,null);
-//        String message = JSON.toJSONString(messageBean);
-//        ByteBuffer buffer = ByteBuffer.allocate(4+ ByteBufferUtils.getByteSize(message));
-//        buffer.putInt(ByteBufferUtils.getByteSize(message));
-//        buffer.put(message.getBytes());
-//        buffer.flip();
-//        try {
-//            socketChannel.write(buffer);
-//        } catch (IOException e) {
-//            logger.error("Write buffer failed");
-//        }
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName,Destination.TOPIC.getDestination(),false,0,null);
+        this.channel.writeAndFlush(MessageUtils.message2Protocol(message));
     }
 
     /**
@@ -198,7 +188,7 @@ public class Producer {
     public static void main(String[] args) {
         Producer producer = new Producer();
         for (int i = 0; i < 10; i++) {
-            producer.sendDelayMessage("你好", "queue",5,TimeUnit.SECONDS);
+            producer.publish("你好", "topic");
         }
     }
 }

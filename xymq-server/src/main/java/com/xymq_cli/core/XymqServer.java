@@ -118,6 +118,7 @@ public class XymqServer {
             // 开始推送消息
             sendMessageToClients();
             sendDelayMessageToClient();
+            sendMessageToSubscriber();
             sync.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             throw new RuntimeException("netty服务端启动失败");
@@ -186,22 +187,23 @@ public class XymqServer {
                     for (Map.Entry<String, DelayQueue<Message>> entry : delayQueueContainer.entrySet()) {
                         String key = entry.getKey();
                         DelayQueue<Message> queue = entry.getValue();
-                        System.out.println(queue.size());
-                        while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+                        if (queue.size() > 0 && consumerContainer.containsKey(key)) {
                             CompletableFuture.runAsync(()->{
-                                if (consumerContainer.get(key).size() != 0) {
-                                    Channel channel = getChannel(consumerContainer.get(key));
-                                    if (channel.isActive()) {
-                                        /*
-                                         * 发送消息到未断开连接的消费者
-                                         * */
-                                        Message message = null;
-                                        try {
-                                            message = queue.take();
-                                            channel.writeAndFlush(MessageUtils.message2Protocol(message));
-                                        } catch (InterruptedException e) {
-                                            logger.error("消息{}推送时发生异常",message.getMessageId());
-                                            e.printStackTrace();
+                                while(queue.size() > 0 && consumerContainer.containsKey(key)){
+                                    if (consumerContainer.get(key).size() != 0) {
+                                        Channel channel = getChannel(consumerContainer.get(key));
+                                        if (channel.isActive()) {
+                                            /*
+                                             * 发送消息到未断开连接的消费者
+                                             * */
+                                            Message message = null;
+                                            try {
+                                                message = queue.take();
+                                                channel.writeAndFlush(MessageUtils.message2Protocol(message));
+                                            } catch (InterruptedException e) {
+                                                logger.error("消息{}推送时发生异常",message.getMessageId());
+                                                e.printStackTrace();
+                                            }
                                         }
                                     }
                                 }
@@ -230,42 +232,46 @@ public class XymqServer {
                     for (Map.Entry<String, LinkedBlockingDeque<Message>> entry : topicContainer.entrySet()) {
                         String key = entry.getKey();
                         LinkedBlockingDeque<Message> topicQueue = entry.getValue();
-                        while (topicQueue.size() > 0 && subscriberContainer.containsKey(key)) {
-                            if (subscriberContainer.get(key).size() != 0) {
-                                Message message = topicQueue.poll();
-                                // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
-                                HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
-                                // 遍历整个订阅者容器，向每一个订阅者推送消息
-                                for (Map.Entry<Long, Channel> longSocketChannelEntry : subscribers.entrySet()) {
-                                    Long clientId = longSocketChannelEntry.getKey();
-                                    Channel subscriber = longSocketChannelEntry.getValue();
-                                    // 如果当前订阅者在线就推送消息
-                                    if (subscriber.isActive()) {
-                                        // 推送消息
-                                        subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
-                                    } else {
-                                        // 如果当前订阅者已经离线，就将消费者的id和消息存储起来
-                                        // 假如已经有对应的主题离线容器，就直接将channel和订阅者编号存入容器
-                                        if (offLineSubscriber.containsKey(key)) {
-                                            offLineSubscriber.get(key).put(clientId, subscriber);
-                                        } else {
-                                            // 如果不存在离线订阅者容器就创建容器在channel和订阅者编号存入容器
-                                            offLineSubscriber.put(key, new HashMap<Long, Channel>());
-                                            offLineSubscriber.get(key).put(clientId, subscriber);
-                                        }
-                                        // offLineTopicMessage中key是订阅者编号，value是未推送消息的集合
-                                        // 如果这个离线订阅者已经有未读消息就直接将消息存入
-                                        if (offLineTopicMessage.containsKey(clientId)) {
-                                            offLineTopicMessage.get(clientId).add(message);
-                                        } else {
-                                            // 刚离线的订阅者就新建容器
-                                            offLineTopicMessage.put(clientId, new ArrayList<>());
-                                            offLineTopicMessage.get(clientId).add(message);
+                        // 假如某个主题容器有消息并且有订阅者在线
+                        if (topicQueue.size() > 0 && subscriberContainer.containsKey(key)) {
+                            CompletableFuture.runAsync(()->{
+                                while(topicQueue.size() > 0 && subscriberContainer.containsKey(key)){
+                                    if (subscriberContainer.get(key).size() != 0) {
+                                        Message message = topicQueue.poll();
+                                        // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
+                                        HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
+                                        // 遍历整个订阅者容器，向每一个订阅者推送消息
+                                        for (Map.Entry<Long, Channel> longSocketChannelEntry : subscribers.entrySet()) {
+                                            Long clientId = longSocketChannelEntry.getKey();
+                                            Channel subscriber = longSocketChannelEntry.getValue();
+                                            // 如果当前订阅者在线就推送消息
+                                            if (subscriber.isActive()) {
+                                                // 推送消息
+                                                subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
+                                            } else {
+                                                // 如果当前订阅者已经离线，就将消费者的id和消息存储起来
+                                                // 假如已经有对应的主题离线容器，就直接将channel和订阅者编号存入容器
+                                                if (offLineSubscriber.containsKey(key)) {
+                                                    offLineSubscriber.get(key).put(clientId, subscriber);
+                                                } else {
+                                                    // 如果不存在离线订阅者容器就创建容器在channel和订阅者编号存入容器
+                                                    offLineSubscriber.put(key, new HashMap<Long, Channel>());
+                                                    offLineSubscriber.get(key).put(clientId, subscriber);
+                                                }
+                                                // offLineTopicMessage中key是订阅者编号，value是未推送消息的集合
+                                                // 如果这个离线订阅者已经有未读消息就直接将消息存入
+                                                if (offLineTopicMessage.containsKey(clientId)) {
+                                                    offLineTopicMessage.get(clientId).add(message);
+                                                } else {
+                                                    // 刚离线的订阅者就新建容器
+                                                    offLineTopicMessage.put(clientId, new ArrayList<>());
+                                                    offLineTopicMessage.get(clientId).add(message);
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
-
+                            },taskExecutor);
                         }
                     }
                 }
@@ -308,6 +314,7 @@ public class XymqServer {
             String key = iterator.next();
             if (!key.equals("offLineSubscriber") && !key.equals("offLineTopicMessage")) {
                 Message message = levelDb.getMessageBean(key);
+                System.out.println(message);
                 if (null != message) {
                     if (message.getDestinationType() == (Destination.QUEUE.getDestination())) {
                         if (queueContainer.containsKey(message.getDestination())) {

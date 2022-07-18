@@ -68,7 +68,7 @@ public class ProducerExec implements Execution{
      * @email 1677685900@qq.com
      */
     private void execTopicMessage(Message message) {
-        if (xymqServer.getTopicContainer().containsKey(message.getDestination())) {
+        if (xymqServer.getSubscriberContainer().containsKey(message.getDestination())) {
             if(message.getDelay() == 0){
                 storageHelper.storeTopicMessage(xymqServer.getTopicContainer(), message);
             }else {
