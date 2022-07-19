@@ -129,17 +129,8 @@ public class Producer {
      * @email 1677685900@qq.com
      */
     public void publishDelayMessage(String content, String destinationName, long delay, TimeUnit timeUnit) {
-//        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName,DestinationType.TOPIC.getType(),false,delay,timeUnit);
-//        String message = JSON.toJSONString(messageBean);
-//        ByteBuffer buffer = ByteBuffer.allocate(4+ ByteBufferUtils.getByteSize(message));
-//        buffer.putInt(ByteBufferUtils.getByteSize(message));
-//        buffer.put(message.getBytes());
-//        buffer.flip();
-//        try {
-//            socketChannel.write(buffer);
-//        } catch (IOException e) {
-//            logger.error("Write buffer failed");
-//        }
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName,Destination.TOPIC.getDestination(),false,delay,timeUnit);
+        channel.writeAndFlush(MessageUtils.message2Protocol(message));
     }
 
     /**
@@ -153,22 +144,8 @@ public class Producer {
      * @email 1677685900@qq.com
      */
     public void sendPriorityMessage(String content, String destinationName) {
-//        MessageBean messageBean = new MessageBean(null, MessageType.PRIVODER.getType(), content,destinationName, DestinationType.QUEUE.getType(),true,0,TimeUnit.MILLISECONDS);
-//        String message = JSON.toJSONString(messageBean);
-//        ByteBuffer buffer = ByteBuffer.allocate(4+ ByteBufferUtils.getByteSize(message));
-//        buffer.putInt(ByteBufferUtils.getByteSize(message));
-//        buffer.put(message.getBytes());
-//        buffer.flip();
-//        try {
-//            socketChannel.socket().setSendBufferSize(1024*10000);
-//        } catch (SocketException e) {
-//            logger.error("producer failed to connect to the server ");
-//        }
-//        try {
-//            socketChannel.write(buffer);
-//        } catch (IOException e) {
-//            logger.error("Write buffer failed");
-//        }
+        Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName, Destination.QUEUE.getDestination(),true,0,TimeUnit.MILLISECONDS);
+        channel.writeAndFlush(MessageUtils.message2Protocol(message));
     }
 
     /**

@@ -84,8 +84,8 @@ public class LevelDbStorageHelper implements StorageHelper{
     }
 
     /**
-     * 存储消息到延时队列容器
-     *
+     * 存储消息到延时队列容器(不存入leveldb)
+     * todo 延迟消息支持持久化
      * @param delayQueueMap 延时队列容器
      * @param message       消息对象
      * @return void
@@ -105,12 +105,13 @@ public class LevelDbStorageHelper implements StorageHelper{
             delayQueue.offer(message);
             delayQueueMap.put(destination, delayQueue);
         }
+        levelDb.putMessage(message.getMessageId(), message);
     }
 
     /**
-     * 存储消息到延时主题消息容器
-     *
-     * @param delayTopicMap 主题消息容器
+     * 存储消息到延时主题消息容器(不存入leveldb)
+     * todo 延迟消息支持持久化
+     * @param delayTopicContainer 主题消息容器
      * @param message       消息对象
      * @return void
      * @author 黎勇炫
@@ -118,7 +119,12 @@ public class LevelDbStorageHelper implements StorageHelper{
      * @email 1677685900@qq.com
      */
     @Override
-    public void storeDelayTopicMessage(ConcurrentHashMap<String, DelayQueue<Message>> delayTopicMap, Message message) {
-
+    public void storeDelayTopicMessage(ConcurrentHashMap<String, DelayQueue<Message>> delayTopicContainer, Message message) {
+        if (delayTopicContainer.containsKey(message.getDestination())) {
+            delayTopicContainer.get(message.getDestination()).offer(message);
+        } else {
+            delayTopicContainer.put(message.getDestination(), new DelayQueue<Message>());
+            delayTopicContainer.get(message.getDestination()).offer(message);
+        }
     }
 }

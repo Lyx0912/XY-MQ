@@ -25,14 +25,12 @@ public class ExecutionFactory {
      * 通过构造器动态传参，自动把所有的策略实现加载进工厂
      */
     @Autowired
-    public ExecutionFactory(Execution...args ) {
-        Arrays.stream(args).forEach(strategys->{
-            strategies.add(strategys);
-        });
+    public ExecutionFactory(List<Execution> strategies) {
+        ExecutionFactory.strategies = strategies;
     }
 
     /**
-     * 根据登录类型返回登录策略
+     * 根据类型返回登录策略
      */
     public static Execution getStrategy(int type) {
         for (Execution strategy : strategies) {

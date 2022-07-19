@@ -269,6 +269,8 @@ public class XymqServer {
                                                 }
                                             }
                                         }
+                                        // 推送完从leveldb中删除消息
+                                        levelDb.deleteMessageBean(message.getMessageId());
                                     }
                                 }
                             },taskExecutor);
