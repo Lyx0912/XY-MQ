@@ -165,7 +165,7 @@ public class Producer {
     public static void main(String[] args) {
         Producer producer = new Producer();
         for (int i = 0; i < 10; i++) {
-            producer.publish("你好", "topic");
+            producer.sendMsg("你好", "queue");
         }
     }
 }

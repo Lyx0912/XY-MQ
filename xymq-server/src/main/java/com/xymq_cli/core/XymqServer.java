@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +40,8 @@ public class XymqServer {
     private ThreadPoolTaskExecutor taskExecutor;
     @Autowired
     private LevelDb levelDb;
+    @Autowired
+    private ClientManager clientManager;
 
     private Logger logger = LoggerFactory.getLogger(XymqServer.class);
 
@@ -346,5 +349,24 @@ public class XymqServer {
         System.out.println("server started!");
     }
 
+    /**
+     * 清理离线客户端
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/19
+     * @email 1677685900@qq.com
+     */
+    @Scheduled(cron = "0/1 * * * * ? ")
+    public void clean(){
+        clientManager.clean(consumerContainer);
+    }
+
+    /**
+     * 存储离线客户端和离线消息
+     */
+    @Scheduled(cron = "0/1 * * * * ? ")
+    public void storeOfflineData(){
+        clientManager.storeOfflineData(offLineTopicMessage,offLineSubscriber);
+    }
 
 }

@@ -215,7 +215,7 @@ public class LevelDb {
      * @create 2022/7/10
      * @email 1677685900@qq.com
      */
-    public void storeOffLineSubscriber(ConcurrentHashMap<String, HashMap<Long, SocketChannel>> offLineSubscriber) {
+    public void storeOffLineSubscriber(ConcurrentHashMap<String, HashMap<Long, Channel>> offLineSubscriber) {
         if(null != db){
             try {
                 byte[] key = ServerConstant.OFFLINE_SUBSCRIBER.getBytes(charset);
