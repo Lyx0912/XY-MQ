@@ -164,8 +164,8 @@ public class Producer {
 
     public static void main(String[] args) {
         Producer producer = new Producer();
-        for (int i = 0; i < 10; i++) {
-            producer.sendMsg("你好", "queue");
+        for (int i = 0; i < 100000; i++) {
+            producer.sendMsg("你好"+i, "queue");
         }
     }
 }

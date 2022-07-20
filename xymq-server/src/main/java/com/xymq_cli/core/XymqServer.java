@@ -151,22 +151,34 @@ public class XymqServer {
                         String key = entry.getKey();
                         LinkedBlockingDeque<Message> queue = entry.getValue();
                         // 当消息队列中有数据并且该队列存在消费者，就调用线程池，负责为该队列推送消息
-                        if ((queue.size() > 0 && consumerContainer.containsKey(key))) {
-                            CompletableFuture.runAsync(() -> {
-                                while (queue.size() > 0 && consumerContainer.containsKey(key)) {
-                                    if (consumerContainer.get(key).size() != 0) {
-                                        Channel channel = getChannel(consumerContainer.get(key));
-                                        // 只有连接在活跃状态下才开始推送消息
-                                        if (channel.isActive()) {
-                                            // 发送消息到未断开连接的消费者
-                                            Message message = queue.poll();
-                                            MessageUtils.message2Protocol(message);
-                                            channel.writeAndFlush(MessageUtils.message2Protocol(message));
-                                        }
-                                    }
+                        while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+                            if (consumerContainer.get(key).size() != 0) {
+                                Channel channel = getChannel(consumerContainer.get(key));
+                                // 只有连接在活跃状态下才开始推送消息
+                                if (channel.isActive()) {
+                                    // 发送消息到未断开连接的消费者
+                                    Message message = queue.poll();
+                                    MessageUtils.message2Protocol(message);
+                                    channel.writeAndFlush(MessageUtils.message2Protocol(message));
                                 }
-                            }, taskExecutor);
+                            }
                         }
+//                        if ((queue.size() > 0 && consumerContainer.containsKey(key))) {
+//                            CompletableFuture.runAsync(() -> {
+//                                while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+//                                    if (consumerContainer.get(key).size() != 0) {
+//                                        Channel channel = getChannel(consumerContainer.get(key));
+//                                        // 只有连接在活跃状态下才开始推送消息
+//                                        if (channel.isActive()) {
+//                                            // 发送消息到未断开连接的消费者
+//                                            Message message = queue.poll();
+//                                            MessageUtils.message2Protocol(message);
+//                                            channel.writeAndFlush(MessageUtils.message2Protocol(message));
+//                                        }
+//                                    }
+//                                }
+//                            }, taskExecutor);
+//                        }
                     }
                 }
             } catch (Exception e) {
@@ -319,7 +331,6 @@ public class XymqServer {
             String key = iterator.next();
             if (!key.equals("offLineSubscriber") && !key.equals("offLineTopicMessage")) {
                 Message message = levelDb.getMessageBean(key);
-                System.out.println(message);
                 if (null != message) {
                     if (message.getDestinationType() == (Destination.QUEUE.getDestination())) {
                         if (queueContainer.containsKey(message.getDestination())) {
