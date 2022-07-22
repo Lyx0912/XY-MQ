@@ -162,10 +162,21 @@ public class Producer {
     }
 
 
+     /**
+       * 生产者实例
+       */
     public static void main(String[] args) {
+        // 创建生产者
         Producer producer = new Producer();
-        for (int i = 0; i < 100000; i++) {
-            producer.sendMsg("你好"+i, "queue");
-        }
+        // 推送普通的队列消息
+        producer.sendMsg("你好，我是队列消息","queue");
+        // 推送主题消息
+        producer.publish("你好，我是主题消息","topic");
+        // 推送延迟消息，设置延迟数和单位，消息会在5分钟后推送给消费者
+        producer.sendDelayMessage("你好，我是延时队列消息","queueDelayM",5,TimeUnit.SECONDS);
+        // 推送延迟主题消息
+        producer.sendDelayMessage("你好，我是延时主题消息","queueDelayT",5,TimeUnit.SECONDS);
+        // 设置优先级，消息会插入到队列头
+        producer.sendPriorityMessage("你好，我是队列消息","queue");
     }
 }

@@ -98,7 +98,11 @@ public class Subscriber {
         return this;
     }
 
+     /**
+       * 订阅者消费示例
+       */
     public static void main(String[] args) {
+        // 构建订阅者订阅'topic'主题，订阅者编号为1
         Subscriber subscriber = new Subscriber("topic",1);
         subscriber.createListener(new MessageListener() {
             @Override
@@ -106,5 +110,8 @@ public class Subscriber {
                 System.out.println(data.getMessage());
             }
         }).run();
+
+        // 关闭订阅者
+        subscriber.close();
     }
 }
