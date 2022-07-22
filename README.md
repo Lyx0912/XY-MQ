@@ -3,4 +3,4 @@
 
 ## 系统架构图
 
-![image-20220722143333878](https://github.com/Lyx0912/XY-MQ/tree/main/doc/系统架构.png)
+![image-20220722143333878](https://github.com/Lyx0912/XY-MQ/blob/main/doc/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84.png)
