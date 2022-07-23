@@ -41,7 +41,9 @@ public class ClientManager {
 //                    longSocketChannelEntry.setValue(SocketChannel.open());
 //                }
 //            }
-                levelDb.storeOffLineSubscriber(cpOffLineSubscriber);
+                if(!CollectionUtils.isEmpty(cpOffLineSubscriber)){
+                    levelDb.storeOffLineSubscriber(cpOffLineSubscriber);
+                }
             }
         },taskExecutor);
     }
@@ -57,6 +59,7 @@ public class ClientManager {
                 while (iterator.hasNext()) {
                     Channel client = (Channel) iterator.next();
                     if (!client.isActive()) {
+                        System.out.println("清理离线客户端");
                         iterator.remove();
                     }
                 }

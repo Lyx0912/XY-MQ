@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -107,29 +108,31 @@ public class XymqServer {
      * @email 1677685900@qq.com
      */
     public void init() {
-        ServerBootstrap server = new ServerBootstrap();
-        try {
-            server.group(bossGroup, ioGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, backLog)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    .childHandler(new ServerInitializer());
+        CompletableFuture.runAsync(() -> {
+            ServerBootstrap server = new ServerBootstrap();
+            try {
+                server.group(bossGroup, ioGroup)
+                        .channel(NioServerSocketChannel.class)
+                        .option(ChannelOption.SO_BACKLOG, backLog)
+                        .childOption(ChannelOption.SO_KEEPALIVE, true)
+                        .childHandler(new ServerInitializer());
 
-            ChannelFuture sync = server.bind(port);
-            // 还原数据
-            recoveryMessage();
-            // 开始推送消息
-            sendMessageToClients();
-            sendDelayMessageToClient();
-            sendMessageToSubscriber();
-            sync.channel().closeFuture().sync();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("netty服务端启动失败");
-        } finally {
-            // 关闭两个工作线程组
-            bossGroup.shutdownGracefully();
-            ioGroup.shutdownGracefully();
-        }
+                ChannelFuture sync = server.bind(port);
+                // 数据恢复
+                recoveryMessage();
+                // 开始推送消息
+                sendMessageToClients();
+                sendDelayMessageToClient();
+                sendMessageToSubscriber();
+                sync.channel().closeFuture().sync();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("netty服务端启动失败");
+            } finally {
+                // 关闭两个工作线程组
+                bossGroup.shutdownGracefully();
+                ioGroup.shutdownGracefully();
+            }
+        }, taskExecutor);
     }
 
     /**
@@ -163,21 +166,18 @@ public class XymqServer {
                                 }
                             }
                         }
-//                        if ((queue.size() > 0 && consumerContainer.containsKey(key))) {
-//                            CompletableFuture.runAsync(() -> {
-//                                while (queue.size() > 0 && consumerContainer.containsKey(key)) {
-//                                    if (consumerContainer.get(key).size() != 0) {
-//                                        Channel channel = getChannel(consumerContainer.get(key));
-//                                        // 只有连接在活跃状态下才开始推送消息
-//                                        if (channel.isActive()) {
-//                                            // 发送消息到未断开连接的消费者
-//                                            Message message = queue.poll();
-//                                            MessageUtils.message2Protocol(message);
-//                                            channel.writeAndFlush(MessageUtils.message2Protocol(message));
-//                                        }
-//                                    }
+
+//                        while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+//                            if (consumerContainer.get(key).size() != 0) {
+//                                Channel channel = getChannel(consumerContainer.get(key));
+//                                // 只有连接在活跃状态下才开始推送消息
+//                                if (channel.isActive()) {
+//                                    // 发送消息到未断开连接的消费者
+//                                    Message message = queue.poll();
+//                                    MessageUtils.message2Protocol(message);
+//                                    channel.writeAndFlush(MessageUtils.message2Protocol(message));
 //                                }
-//                            }, taskExecutor);
+//                            }
 //                        }
                     }
                 }
@@ -202,38 +202,35 @@ public class XymqServer {
                     for (Map.Entry<String, DelayQueue<Message>> entry : delayQueueContainer.entrySet()) {
                         String key = entry.getKey();
                         DelayQueue<Message> queue = entry.getValue();
-                        if (queue.size() > 0 && consumerContainer.containsKey(key)) {
-                            CompletableFuture.runAsync(()->{
-                                while(queue.size() > 0 && consumerContainer.containsKey(key)){
-                                    if (consumerContainer.get(key).size() != 0) {
-                                        Channel channel = getChannel(consumerContainer.get(key));
-                                        if (channel.isActive()) {
-                                            /*
-                                             * 发送消息到未断开连接的消费者
-                                             * */
-                                            Message message = null;
-                                            try {
-                                                message = queue.take();
-                                                channel.writeAndFlush(MessageUtils.message2Protocol(message));
-                                            } catch (InterruptedException e) {
-                                                logger.error("消息{}推送时发生异常",message.getMessageId());
-                                                e.printStackTrace();
-                                            }
-                                        }
+                        while (queue.size() > 0 && consumerContainer.containsKey(key)) {
+                            if (consumerContainer.get(key).size() != 0) {
+                                Channel channel = getChannel(consumerContainer.get(key));
+                                if (channel.isActive()) {
+                                    /*
+                                     * 发送消息到未断开连接的消费者
+                                     * */
+                                    Message message = null;
+                                    try {
+                                        message = queue.take();
+                                        channel.writeAndFlush(MessageUtils.message2Protocol(message));
+                                    } catch (InterruptedException e) {
+                                        logger.error("消息{}推送时发生异常", message.getMessageId());
+                                        e.printStackTrace();
                                     }
                                 }
-                            },taskExecutor);
+                            }
                         }
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        },taskExecutor);
+        }, taskExecutor);
     }
 
     /**
      * 发布消息到订阅了的客户端
+     *
      * @return void
      * @author 黎勇炫
      * @create 2022/7/17
@@ -241,54 +238,51 @@ public class XymqServer {
      */
     public void sendMessageToSubscriber() {
         //判断是否所有消费者都已经消费，如果都消费了就从数据库中删除
-        CompletableFuture.runAsync(()->{
+        CompletableFuture.runAsync(() -> {
             try {
                 while (!bossGroup.isShutdown()) {
                     for (Map.Entry<String, LinkedBlockingDeque<Message>> entry : topicContainer.entrySet()) {
                         String key = entry.getKey();
                         LinkedBlockingDeque<Message> topicQueue = entry.getValue();
+                        System.out.println(topicQueue);
                         // 假如某个主题容器有消息并且有订阅者在线
-                        if (topicQueue.size() > 0 && subscriberContainer.containsKey(key)) {
-                            CompletableFuture.runAsync(()->{
-                                while(topicQueue.size() > 0 && subscriberContainer.containsKey(key)){
-                                    if (subscriberContainer.get(key).size() != 0) {
-                                        Message message = topicQueue.poll();
-                                        // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
-                                        HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
-                                        // 遍历整个订阅者容器，向每一个订阅者推送消息
-                                        for (Map.Entry<Long, Channel> longSocketChannelEntry : subscribers.entrySet()) {
-                                            Long clientId = longSocketChannelEntry.getKey();
-                                            Channel subscriber = longSocketChannelEntry.getValue();
-                                            // 如果当前订阅者在线就推送消息
-                                            if (subscriber.isActive()) {
-                                                // 推送消息
-                                                subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
-                                            } else {
-                                                // 如果当前订阅者已经离线，就将消费者的id和消息存储起来
-                                                // 假如已经有对应的主题离线容器，就直接将channel和订阅者编号存入容器
-                                                if (offLineSubscriber.containsKey(key)) {
-                                                    offLineSubscriber.get(key).put(clientId, subscriber);
-                                                } else {
-                                                    // 如果不存在离线订阅者容器就创建容器在channel和订阅者编号存入容器
-                                                    offLineSubscriber.put(key, new HashMap<Long, Channel>());
-                                                    offLineSubscriber.get(key).put(clientId, subscriber);
-                                                }
-                                                // offLineTopicMessage中key是订阅者编号，value是未推送消息的集合
-                                                // 如果这个离线订阅者已经有未读消息就直接将消息存入
-                                                if (offLineTopicMessage.containsKey(clientId)) {
-                                                    offLineTopicMessage.get(clientId).add(message);
-                                                } else {
-                                                    // 刚离线的订阅者就新建容器
-                                                    offLineTopicMessage.put(clientId, new ArrayList<>());
-                                                    offLineTopicMessage.get(clientId).add(message);
-                                                }
-                                            }
+                        while (topicQueue.size() > 0 && subscriberContainer.containsKey(key)) {
+                            if (subscriberContainer.get(key).size() != 0) {
+                                Message message = topicQueue.poll();
+                                // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
+                                HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
+                                // 遍历整个订阅者容器，向每一个订阅者推送消息
+                                for (Map.Entry<Long, Channel> longSocketChannelEntry : subscribers.entrySet()) {
+                                    Long clientId = longSocketChannelEntry.getKey();
+                                    Channel subscriber = longSocketChannelEntry.getValue();
+                                    // 如果当前订阅者在线就推送消息
+                                    if (subscriber.isActive()) {
+                                        // 推送消息
+                                        subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
+                                    } else {
+                                        // 如果当前订阅者已经离线，就将消费者的id和消息存储起来
+                                        // 假如已经有对应的主题离线容器，就直接将channel和订阅者编号存入容器
+                                        if (offLineSubscriber.containsKey(key)) {
+                                            offLineSubscriber.get(key).put(clientId, subscriber);
+                                        } else {
+                                            // 如果不存在离线订阅者容器就创建容器在channel和订阅者编号存入容器
+                                            offLineSubscriber.put(key, new HashMap<Long, Channel>());
+                                            offLineSubscriber.get(key).put(clientId, subscriber);
                                         }
-                                        // 推送完从leveldb中删除消息
-                                        levelDb.deleteMessageBean(message.getMessageId());
+                                        // offLineTopicMessage中key是订阅者编号，value是未推送消息的集合
+                                        // 如果这个离线订阅者已经有未读消息就直接将消息存入
+                                        if (offLineTopicMessage.containsKey(clientId)) {
+                                            offLineTopicMessage.get(clientId).add(message);
+                                        } else {
+                                            // 刚离线的订阅者就新建容器
+                                            offLineTopicMessage.put(clientId, new ArrayList<>());
+                                            offLineTopicMessage.get(clientId).add(message);
+                                        }
                                     }
                                 }
-                            },taskExecutor);
+                                // 推送完从leveldb中删除消息
+                                levelDb.deleteMessageBean(message.getMessageId());
+                            }
                         }
                     }
                 }
@@ -296,7 +290,7 @@ public class XymqServer {
                 logger.error("推送主题消息时发生异常");
                 e.printStackTrace();
             }
-        },taskExecutor);
+        }, taskExecutor);
     }
 
     /**
@@ -329,9 +323,11 @@ public class XymqServer {
         Iterator<String> iterator = keys.iterator();
         while (iterator.hasNext()) {
             String key = iterator.next();
+            // 区分普通消息和离线订阅消息
             if (!key.equals("offLineSubscriber") && !key.equals("offLineTopicMessage")) {
                 Message message = levelDb.getMessageBean(key);
                 if (null != message) {
+                    // 创建对应的容器并放入
                     if (message.getDestinationType() == (Destination.QUEUE.getDestination())) {
                         if (queueContainer.containsKey(message.getDestination())) {
                             queueContainer.get(message.getDestination()).offer(message);
@@ -357,27 +353,29 @@ public class XymqServer {
                 }
             }
         }
-        System.out.println("server started!");
     }
 
     /**
      * 清理离线客户端
+     *
      * @return void
      * @author 黎勇炫
      * @create 2022/7/19
      * @email 1677685900@qq.com
      */
+    @Async
     @Scheduled(cron = "0/1 * * * * ? ")
-    public void clean(){
+    public void clean() {
         clientManager.clean(consumerContainer);
     }
 
     /**
      * 存储离线客户端和离线消息
      */
+    @Async
     @Scheduled(cron = "0/1 * * * * ? ")
-    public void storeOfflineData(){
-        clientManager.storeOfflineData(offLineTopicMessage,offLineSubscriber);
+    public void storeOfflineData() {
+        clientManager.storeOfflineData(offLineTopicMessage, offLineSubscriber);
     }
 
 }

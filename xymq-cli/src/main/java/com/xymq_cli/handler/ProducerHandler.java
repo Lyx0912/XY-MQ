@@ -10,6 +10,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class ProducerHandler extends SimpleChannelInboundHandler<Protocol> {
 
+
+
      /**
        * 客户端连接成功就向服务端注册自己
        */
@@ -27,5 +29,11 @@ public class ProducerHandler extends SimpleChannelInboundHandler<Protocol> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Protocol protocol) throws Exception {
 
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        System.out.println("关闭与服务端的连接");
+        ctx.channel().close();
     }
 }

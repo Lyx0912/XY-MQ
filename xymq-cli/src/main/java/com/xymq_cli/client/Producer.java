@@ -11,6 +11,7 @@ import com.xymq_common.protocol.Protocol;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ public class Producer {
     /**
      * 日志
      */
+    private NioEventLoopGroup clientGroup = new NioEventLoopGroup();
     private Logger logger = LoggerFactory.getLogger(Producer.class);
 
     static {
@@ -59,14 +61,11 @@ public class Producer {
      */
     public Producer() {
         producerHandler = new ProducerHandler();
-        NioEventLoopGroup clientGroup = new NioEventLoopGroup();
-
         try {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(clientGroup)
                     .channel(NioSocketChannel.class)
                     .handler(new ProducerlInitializer(producerHandler));
-
             // 连接服务器
             ChannelFuture sync = bootstrap.connect(host, port).sync();
             this.channel = sync.channel();
@@ -79,7 +78,7 @@ public class Producer {
     /**
      * 发送队列消息，需要传入消息内容以及队列名称
      */
-    public void sendMsg(String content, String destinationName) {
+    public void sendMsg(String content, String destinationName) throws InterruptedException {
         Message message = new Message(null, MessageType.PRIVODER.getType(), content, destinationName, Destination.QUEUE.getDestination(), false, 0, TimeUnit.SECONDS);
         Protocol protocol = MessageUtils.message2Protocol(message);
         channel.writeAndFlush(protocol);
@@ -157,26 +156,33 @@ public class Producer {
      * @email 1677685900@qq.com
      */
     public void close() {
-        // 关闭工作组
-        this.channel.close();
+        channel.close().channel();
+        this.clientGroup.shutdownGracefully();
+    }
+
+    public Channel getChannel(){
+        return this.channel;
     }
 
 
      /**
        * 生产者实例
        */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // 创建生产者
         Producer producer = new Producer();
         // 推送普通的队列消息
-        producer.sendMsg("你好，我是队列消息","queue");
+//        for (int i = 0; i < 100000; i++) {
+//            producer.sendMsg("你好，我是队列消息"+i,"queue");
+//        }
+//        Thread.sleep(300);
         // 推送主题消息
         producer.publish("你好，我是主题消息","topic");
-        // 推送延迟消息，设置延迟数和单位，消息会在5分钟后推送给消费者
-        producer.sendDelayMessage("你好，我是延时队列消息","queueDelayM",5,TimeUnit.SECONDS);
-        // 推送延迟主题消息
-        producer.sendDelayMessage("你好，我是延时主题消息","queueDelayT",5,TimeUnit.SECONDS);
-        // 设置优先级，消息会插入到队列头
-        producer.sendPriorityMessage("你好，我是队列消息","queue");
+//        // 推送延迟消息，设置延迟数和单位，消息会在5分钟后推送给消费者
+//        producer.sendDelayMessage("你好，我是延时队列消息","queueDelayM",5,TimeUnit.SECONDS);
+//        // 推送延迟主题消息
+//        producer.sendDelayMessage("你好，我是延时主题消息","queueDelayT",5,TimeUnit.SECONDS);
+//        // 设置优先级，消息会插入到队列头
+//        producer.sendPriorityMessage("你好，我是队列消息","queue");
     }
 }

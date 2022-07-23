@@ -17,7 +17,7 @@ public class ThreadConfig {
      /**
        * 核心线程池大小
        */
-    private int corePoolSize = 75;
+    private int corePoolSize = 100;
 
      /**
        * 最大可创建的线程数
