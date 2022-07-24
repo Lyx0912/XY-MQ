@@ -146,6 +146,7 @@ public class XymqServer {
         sendDelayMessageToClient();
         sendMessageToSubscriber();
         sendDelayTopicMessageToSubscriber();
+        sendMessageTorebindingSubscriber();
     }
 
     /**
@@ -306,6 +307,49 @@ public class XymqServer {
             } catch (Exception e) {
                 logger.error("推送延时主题消息时发生异常");
                 e.printStackTrace();
+            }
+        },taskExecutor);
+    }
+
+    /**
+     * 订阅者上线时，如果是该编号有离线消息，就先推送离线消息
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/24
+     * @email 1677685900@qq.com
+     */
+    public void sendMessageTorebindingSubscriber() {
+        CompletableFuture.runAsync(()->{
+            while (!bossGroup.isShutdown()) {
+                // 遍历离线订阅者
+                for (Map.Entry<String, HashMap<Long, Channel>> entry : offLineSubscriber.entrySet()) {
+                    // 主题名称
+                    String destination = entry.getKey();
+                    // key是编号，value是对应的客户端
+                    HashMap<Long, Channel> subscribers = entry.getValue();
+                    for (Map.Entry<Long, Channel> channelEntry : subscribers.entrySet()) {
+                        Long clientId = channelEntry.getKey();
+                        Channel channel = channelEntry.getValue();
+                        // 判断客户端是否在连接状态
+                        if (null != channel && channel.isActive()) {
+                            Iterator<Message> iterator = offLineTopicMessage.get(clientId).listIterator();
+                            // 遍历消息，一个个推送
+                            while (iterator.hasNext()) {
+                                Message message = iterator.next();
+                                channel.writeAndFlush(MessageUtils.message2Protocol(message));
+                                iterator.remove();
+                            }
+                            // 消息推送完后重写把客户端放回在线的容器
+                            if (subscriberContainer.containsKey(destination)) {
+                                subscriberContainer.get(destination).put(clientId, channel);
+                            } else {
+                                subscriberContainer.put(destination, new HashMap<Long, Channel>());
+                                subscriberContainer.get(destination).put(clientId, channel);
+                            }
+
+                        }
+                    }
+                }
             }
         },taskExecutor);
     }

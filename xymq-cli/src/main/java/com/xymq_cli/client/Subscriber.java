@@ -103,7 +103,7 @@ public class Subscriber {
        */
     public static void main(String[] args) {
         // 构建订阅者订阅'topic'主题，订阅者编号为1
-        Subscriber subscriber = new Subscriber("topic",1);
+        Subscriber subscriber = new Subscriber("topic",2);
         subscriber.createListener(new MessageListener() {
             @Override
             public void getMessage(MessageData data) {
