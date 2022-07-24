@@ -127,7 +127,7 @@ public class Producer {
      * @create 2022/7/13
      * @email 1677685900@qq.com
      */
-    public void publishDelayMessage(String content, String destinationName, long delay, TimeUnit timeUnit) {
+    public void publishDelayTopicMessage(String content, String destinationName, long delay, TimeUnit timeUnit) {
         Message message = new Message(null, MessageType.PRIVODER.getType(), content,destinationName,Destination.TOPIC.getDestination(),false,delay,timeUnit);
         channel.writeAndFlush(MessageUtils.message2Protocol(message));
     }
@@ -171,13 +171,14 @@ public class Producer {
     public static void main(String[] args) throws InterruptedException {
         // 创建生产者
         Producer producer = new Producer();
+        producer.publishDelayTopicMessage("你好，延时30s","topic",30,TimeUnit.SECONDS);
         // 推送普通的队列消息
 //        for (int i = 0; i < 100000; i++) {
 //            producer.sendMsg("你好，我是队列消息"+i,"queue");
 //        }
 //        Thread.sleep(300);
         // 推送主题消息
-        producer.publish("你好，我是主题消息","topic");
+//        producer.publish("你好，我是主题消息","topic");
 //        // 推送延迟消息，设置延迟数和单位，消息会在5分钟后推送给消费者
 //        producer.sendDelayMessage("你好，我是延时队列消息","queueDelayM",5,TimeUnit.SECONDS);
 //        // 推送延迟主题消息

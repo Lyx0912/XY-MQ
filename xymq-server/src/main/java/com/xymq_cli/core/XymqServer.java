@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -121,9 +122,7 @@ public class XymqServer {
                 // 数据恢复
                 recoveryMessage();
                 // 开始推送消息
-                sendMessageToClients();
-                sendDelayMessageToClient();
-                sendMessageToSubscriber();
+                satrt();
                 sync.channel().closeFuture().sync();
             } catch (InterruptedException e) {
                 throw new RuntimeException("netty服务端启动失败");
@@ -133,6 +132,20 @@ public class XymqServer {
                 ioGroup.shutdownGracefully();
             }
         }, taskExecutor);
+    }
+
+    /**
+     * 开始推送消息
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/24
+     * @email 1677685900@qq.com
+     */
+    private void satrt() {
+        sendMessageToClients();
+        sendDelayMessageToClient();
+        sendMessageToSubscriber();
+        sendDelayTopicMessageToSubscriber();
     }
 
     /**
@@ -247,39 +260,12 @@ public class XymqServer {
                         System.out.println(topicQueue);
                         // 假如某个主题容器有消息并且有订阅者在线
                         while (topicQueue.size() > 0 && subscriberContainer.containsKey(key)) {
-                            if (subscriberContainer.get(key).size() != 0) {
+                            if (!CollectionUtils.isEmpty(subscriberContainer.get(key))) {
                                 Message message = topicQueue.poll();
                                 // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
                                 HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
                                 // 遍历整个订阅者容器，向每一个订阅者推送消息
-                                for (Map.Entry<Long, Channel> longSocketChannelEntry : subscribers.entrySet()) {
-                                    Long clientId = longSocketChannelEntry.getKey();
-                                    Channel subscriber = longSocketChannelEntry.getValue();
-                                    // 如果当前订阅者在线就推送消息
-                                    if (subscriber.isActive()) {
-                                        // 推送消息
-                                        subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
-                                    } else {
-                                        // 如果当前订阅者已经离线，就将消费者的id和消息存储起来
-                                        // 假如已经有对应的主题离线容器，就直接将channel和订阅者编号存入容器
-                                        if (offLineSubscriber.containsKey(key)) {
-                                            offLineSubscriber.get(key).put(clientId, subscriber);
-                                        } else {
-                                            // 如果不存在离线订阅者容器就创建容器在channel和订阅者编号存入容器
-                                            offLineSubscriber.put(key, new HashMap<Long, Channel>());
-                                            offLineSubscriber.get(key).put(clientId, subscriber);
-                                        }
-                                        // offLineTopicMessage中key是订阅者编号，value是未推送消息的集合
-                                        // 如果这个离线订阅者已经有未读消息就直接将消息存入
-                                        if (offLineTopicMessage.containsKey(clientId)) {
-                                            offLineTopicMessage.get(clientId).add(message);
-                                        } else {
-                                            // 刚离线的订阅者就新建容器
-                                            offLineTopicMessage.put(clientId, new ArrayList<>());
-                                            offLineTopicMessage.get(clientId).add(message);
-                                        }
-                                    }
-                                }
+                                putTopicMessage(key, message, subscribers);
                                 // 推送完从leveldb中删除消息
                                 levelDb.deleteMessageBean(message.getMessageId());
                             }
@@ -291,6 +277,86 @@ public class XymqServer {
                 e.printStackTrace();
             }
         }, taskExecutor);
+    }
+
+    /**
+     * 发送延时消息到订阅者
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/24
+     * @email 1677685900@qq.com
+     */
+    public void sendDelayTopicMessageToSubscriber() {
+        CompletableFuture.runAsync(()->{
+            try {
+                while (!bossGroup.isShutdown()) {
+                    for (Map.Entry<String, DelayQueue<Message>> entry : delayTopicContainer.entrySet()) {
+                        String key = entry.getKey();
+                        DelayQueue<Message> delayTopic = entry.getValue();
+                        while (delayTopic.size() > 0 && subscriberContainer.containsKey(key)) {
+                            if (!CollectionUtils.isEmpty(subscriberContainer.get(key))) {
+                                Message message = delayTopic.take();
+                                HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
+                                putTopicMessage(key, message, subscribers);
+                            }
+
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("推送延时主题消息时发生异常");
+                e.printStackTrace();
+            }
+        },taskExecutor);
+    }
+
+    /**
+     * 推送消息给订阅者
+     * @param key
+     * @param message
+     * @param subscribers
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/24
+     * @email 1677685900@qq.com
+     */
+    private void putTopicMessage(String key, Message message, HashMap<Long, Channel> subscribers) {
+        for (Map.Entry<Long, Channel> channelEntry : subscribers.entrySet()) {
+            Long clientId = channelEntry.getKey();
+            Channel subscriber = channelEntry.getValue();
+            if (subscriber.isActive()) {
+                subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
+            } else {
+                storeOfflineData(key, message, clientId, subscriber);
+            }
+        }
+    }
+
+    /**
+     * 存储离线的订阅者和消息
+     * @param key 主题名称
+     * @param message 消息对象
+     * @param clientId 客户端编号
+     * @param subscriber 订阅者
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/7/24
+     * @email 1677685900@qq.com
+     */
+    private void storeOfflineData(String key, Message message, Long clientId, Channel subscriber) {
+        if (offLineSubscriber.containsKey(key)) {
+            HashMap<Long, Channel> offLineSubscribers = offLineSubscriber.get(key);
+            offLineSubscribers.put(clientId, subscriber);
+        } else {
+            offLineSubscriber.put(key, new HashMap<Long, Channel>());
+            offLineSubscriber.get(key).put(clientId, subscriber);
+        }
+        if (offLineTopicMessage.containsKey(clientId)) {
+            offLineTopicMessage.get(clientId).add(message);
+        } else {
+            offLineTopicMessage.put(clientId, new ArrayList<>());
+            offLineTopicMessage.get(clientId).add(message);
+        }
     }
 
     /**
