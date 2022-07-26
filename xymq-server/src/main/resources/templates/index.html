@@ -3,26 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <!-- import CSS -->
-    <link rel="stylesheet" th:href="@{../static/css/element.css}" target="_blank"  >
+    <link rel="stylesheet" th:href="@{../static/css/element.css}" target="_blank">
 </head>
 <body>
 <div id="app">
-    <el-button @click="visible = true">Button</el-button>
-    <el-dialog :visible.sync="visible" title="Hello world">
-        <p>Try Element</p>
-    </el-dialog>
+    <el-container style="height: 100%;height: 100%">
+        <el-aside width="18%" height="100%">
+            <el-menu
+                    default-active="2"
+                    class="el-menu-vertical-demo"
+                    @open="handleOpen"
+                    @close="handleClose">
+                <el-menu-item index="1">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">队列详情</span>
+                </el-menu-item>
+                <el-menu-item index="2">
+                    <i class="el-icon-setting"></i>
+                    <span slot="title">主题详情</span>
+                </el-menu-item>
+                <el-menu-item index="3">
+                    <i class="el-icon-setting"></i>
+                    <span slot="title">使用Demo</span>
+                </el-menu-item>
+            </el-menu>
+        </el-aside>
+        <el-container>
+            <el-header>Header<el-button icon="el-icon-edit">s</el-button> <i class="el-icon-document"></i></el-header>
+            <el-main>Main</el-main>
+        </el-container>
+    </el-container>
 </div>
 </body>
 <!-- import Vue before Element -->
-<script th:src="@{../static/vue/vue.js}" ></script>
+<script th:src="@{../static/vue/vue.js}"></script>
 <!-- import JavaScript -->
 <script th:src="@{../static/js/element.js}"></script>
 <script>
     new Vue({
         el: '#app',
-        data: function() {
-            return { visible: false }
+        data: function () {
+            return {visible: false}
         }
     })
 </script>
+<style>
+    html,body{
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+        padding: 0px;
+    }
+    #app {
+        width: 100%;
+        height: 100%;
+    }
+    .el-aside{
+        border-right: solid 1px #e6e6e6;
+        height: 100%;
+    }
+    .el-menu{
+        border: none;
+    }
+</style>
 </html>
