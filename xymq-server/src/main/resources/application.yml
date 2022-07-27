@@ -14,3 +14,6 @@ xymq:
 #   maxPoolSize: 200
 #   queueCapacity: 1000
 #   keepAliveSeconds: 300
+spring:
+  thymeleaf:
+    cache: false

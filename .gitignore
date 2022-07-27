@@ -27,6 +27,7 @@ hs_err_pid*
 
 
 target/
+leveldb/
 .idea/
 #rebel
 *rebel.xml*

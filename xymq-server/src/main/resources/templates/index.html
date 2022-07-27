@@ -8,12 +8,19 @@
 <body>
 <div id="app">
     <el-container style="height: 100%;height: 100%">
-        <el-aside width="18%" height="100%">
-            <el-menu
-                    default-active="2"
-                    class="el-menu-vertical-demo"
-                    @open="handleOpen"
-                    @close="handleClose">
+        <el-aside width="14%" height="100%">
+            <el-menu default-active="1"
+                     class="el-menu-container"
+                     @open="handleOpen"
+                     @close="handleClose"
+                     background-color="#304156"
+                     text-color="#fff"
+                     active-text-color="#1890ff">
+                <div class="aside-header"></div>
+                <el-menu-item index="0">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">容器概览</span>
+                </el-menu-item>
                 <el-menu-item index="1">
                     <i class="el-icon-document"></i>
                     <span slot="title">队列详情</span>
@@ -29,7 +36,11 @@
             </el-menu>
         </el-aside>
         <el-container>
-            <el-header>Header<el-button icon="el-icon-edit">s</el-button> <i class="el-icon-document"></i></el-header>
+            <el-header>
+                <a class="logo-github">
+                    <el-image style="width: 40px;  height: 40px"  th:src="@{../static/img/github.svg}" :fit="fit"></el-image>
+                </a>
+            </el-header>
             <el-main>Main</el-main>
         </el-container>
     </el-container>
@@ -48,22 +59,42 @@
     })
 </script>
 <style>
-    html,body{
+    html, body {
         height: 100%;
         width: 100%;
         margin: 0px;
         padding: 0px;
     }
+
     #app {
         width: 100%;
         height: 100%;
     }
-    .el-aside{
+
+    .el-aside {
         border-right: solid 1px #e6e6e6;
         height: 100%;
     }
-    .el-menu{
-        border: none;
+
+    .el-menu-container {
+        height: 100%;
+    }
+
+    .el-header {
+        padding: 5px 20px;
+        height: 30px;
+        background-color: #fcfeff;
+        color: #333;
+        text-align: center;
+        line-height: 30px;
+        box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
+    }
+    .aside-header{
+        width: 100%;
+        height: 60px;
+    }
+    .logo-github{
+        float: right;
     }
 </style>
 </html>

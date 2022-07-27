@@ -19,7 +19,8 @@ public class MvcConfig extends WebMvcConfigurationSupport {
 
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/**").excludePathPatterns("/","/index","/index.html","/static/**","/**/*.woff","/**/*.ttf");
+        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/**")
+                .excludePathPatterns("/","/index","/index.html","/static/**","/**/*.woff","/**/*.ttf","/**/*.svg");
     }
 
     @Override
