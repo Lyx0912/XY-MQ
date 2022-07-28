@@ -20,11 +20,12 @@ public class MvcConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/**")
-                .excludePathPatterns("/","/index","/index.html","/static/**","/**/*.woff","/**/*.ttf","/**/*.svg");
+                .excludePathPatterns("/","/index","/index.html","/templates/**","/static/**","/**/*.woff","/**/*.ttf","/**/*.svg","/**/*.js");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("templates/**").addResourceLocations("classpath:/templates/");
         registry.addResourceHandler("static/**").addResourceLocations("classpath:/static/");
     }
 }

@@ -4,57 +4,53 @@
     <meta charset="UTF-8">
     <!-- import CSS -->
     <link rel="stylesheet" th:href="@{../static/css/element.css}" target="_blank">
+    <link rel="stylesheet" th:href="@{../static/css/style.css}" target="_blank">
+    <!-- import Vue before Element -->
+    <script th:src="@{../static/vue/vue.js}"></script>
+    <!-- import JavaScript -->
+    <script th:src="@{../static/js/element.js}"></script>
+    <!-- import Echarts -->
+    <script th:src="@{../static/js/echarts.min.js}"></script>
+    <script type="text/javascript" th:src="@{../templates/components/menu.js}"></script>
 </head>
 <body>
 <div id="app">
-    <el-container style="height: 100%;height: 100%">
-        <el-aside width="14%" height="100%">
-            <el-menu default-active="1"
-                     class="el-menu-container"
-                     @open="handleOpen"
-                     @close="handleClose"
-                     background-color="#304156"
-                     text-color="#fff"
-                     active-text-color="#1890ff">
-                <div class="aside-header"></div>
-                <el-menu-item index="0">
-                    <i class="el-icon-document"></i>
-                    <span slot="title">容器概览</span>
-                </el-menu-item>
-                <el-menu-item index="1">
-                    <i class="el-icon-document"></i>
-                    <span slot="title">队列详情</span>
-                </el-menu-item>
-                <el-menu-item index="2">
-                    <i class="el-icon-setting"></i>
-                    <span slot="title">主题详情</span>
-                </el-menu-item>
-                <el-menu-item index="3">
-                    <i class="el-icon-setting"></i>
-                    <span slot="title">使用Demo</span>
-                </el-menu-item>
-            </el-menu>
-        </el-aside>
-        <el-container>
-            <el-header>
-                <a class="logo-github">
-                    <el-image style="width: 40px;  height: 40px"  th:src="@{../static/img/github.svg}" :fit="fit"></el-image>
-                </a>
-            </el-header>
-            <el-main>Main</el-main>
-        </el-container>
-    </el-container>
+    <x-menu :index="'0'"></x-menu>
 </div>
+<!--<div id="app">-->
+
+<!--</div>-->
 </body>
-<!-- import Vue before Element -->
-<script th:src="@{../static/vue/vue.js}"></script>
-<!-- import JavaScript -->
-<script th:src="@{../static/js/element.js}"></script>
 <script>
     new Vue({
         el: '#app',
+        components:{
+            'x-menu':menu
+        },
         data: function () {
             return {visible: false}
+        },
+        computed:{
+            position(){
+                return {
+                    position:"absolute",
+                    left:0,
+                    top:0,
+                    width:"100%",
+                    height:"100%"
+                }
+            }
+        },
+        created() {
+            this.initCharts()
+        },
+        methods:{
+            initCharts(){
+
+            },
+            parseInt(num){
+                return parseInt(num);
+            }
         }
     })
 </script>
@@ -69,32 +65,6 @@
     #app {
         width: 100%;
         height: 100%;
-    }
-
-    .el-aside {
-        border-right: solid 1px #e6e6e6;
-        height: 100%;
-    }
-
-    .el-menu-container {
-        height: 100%;
-    }
-
-    .el-header {
-        padding: 5px 20px;
-        height: 30px;
-        background-color: #fcfeff;
-        color: #333;
-        text-align: center;
-        line-height: 30px;
-        box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
-    }
-    .aside-header{
-        width: 100%;
-        height: 60px;
-    }
-    .logo-github{
-        float: right;
     }
 </style>
 </html>
