@@ -36,7 +36,15 @@ var menu = Vue.extend({
         '                    <el-image style="width: 40px; height: 40px" alt="源码地址" src="../static/img/github.svg" :fit="fit"></el-image>\n' +
         '                </a>\n' +
         '            </el-header>\n' +
-        '            <el-main>Main</el-main>\n' +
+        '            \t\t\t    \t<!-- 内容区 -->\n' +
+        '\t\t\t    \t<el-main>\n' +
+        '\t\t\t\t\t    <router-view v-slot="{ Component }" >\n' +
+        '\t\t\t\t\t        <keep-alive :include="cacheComponents" :max="200"><!-- :max 缓存组件最大数量 -->\n' +
+        '\t\t\t\t\t        \t<component :is="Component" :key="$store.getters.cacheKey" v-if="isRouterAlive"/>\n' +
+        '\t\t\t\t\t        \t\n' +
+        '\t\t\t\t\t        </keep-alive>\n' +
+        '\t\t\t\t\t    </router-view>\n' +
+        '\t\t\t    \t</el-main>\n' +
         '        </el-container>\n' +
         '    </el-container>'
 });

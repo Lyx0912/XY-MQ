@@ -1,29 +1,72 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <!-- import CSS -->
-    <link rel="stylesheet" th:href="@{../static/css/element.css}" target="_blank">
-    <link rel="stylesheet" th:href="@{../static/css/style.css}" target="_blank">
+    <link rel="stylesheet" href="../static/css/element.css" target="_blank">
+    <link rel="stylesheet" href="../static/css/style.css" target="_blank">
     <!-- import Vue before Element -->
-    <script th:src="@{../static/vue/vue.js}"></script>
+    <script src="../static/vue/vue.js"></script>
     <!-- import JavaScript -->
-    <script th:src="@{../static/js/element.js}"></script>
+    <script src="../static/js/element.js"></script>
     <!-- import Echarts -->
-    <script th:src="@{../static/js/echarts.min.js}"></script>
-    <script type="text/javascript" th:src="@{../templates/components/menu.js}"></script>
+    <script src="../static/js/echarts.min.js"></script>
+    <script type="text/javascript" src="../templates/components/menu.js"></script>
 </head>
 <body>
 <div id="app">
-    <x-menu :index="'0'"></x-menu>
+        <el-container style="height: 100%;height: 100%">
+            <el-aside width="14%" height="100%">
+                <el-menu default-active="/home"
+                         :router="true"
+                         class="el-menu-container"
+                         @open="handleOpen"
+                         @close="handleClose"
+                         background-color="#304156"
+                         text-color="#fff"
+                         active-text-color="#1890ff">
+                    <div class="aside-header"></div>
+                    <el-menu-item index="/home">
+                        <i class="el-icon-document"></i>
+                        <span slot="title">容器概览</span>
+                    </el-menu-item>
+                    <el-menu-item index="/news">
+                        <i class="el-icon-document"></i>
+                        <span slot="title">队列详情</span>
+                    </el-menu-item>
+                    <el-menu-item index="2">
+                        <i class="el-icon-setting"></i>
+                        <span slot="title">主题详情</span>
+                    </el-menu-item>
+                    <el-menu-item index="3">
+                        <i class="el-icon-setting"></i>
+                        <span slot="title">使用Demo</span>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+            <el-container>
+                <el-header>
+                    <a class="logo-github">
+                        <el-image style="width: 40px;  height: 40px"  th:src="@{../static/img/github.svg}" :fit="fit"></el-image>
+                    </a>
+                </el-header>
+                <el-main>
+                    <router-view>
+                    </router-view>
+                </el-main>
+            </el-container>
+        </el-container>
 </div>
-<!--<div id="app">-->
 
-<!--</div>-->
 </body>
+<!-- 组件加载 -->
+<script src="../static/vue2-sfc-loader/vue2-sfc-loader.js" type="text/javascript"></script>
+<script src="../static/js/vue-router.js" type="text/javascript"></script>
+<script src="../static/js/router.js" type="text/javascript"></script>
 <script>
     new Vue({
         el: '#app',
+        router,
         components:{
             'x-menu':menu
         },
