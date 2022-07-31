@@ -1,11 +1,7 @@
-// 1.定义路由所需的组件
-const home = { template: "<div>首页 纵览天下大事</div>" };
-const news = { template: "<div>新闻 用事实说话</div>" };
-
 // 2.定义路由，每个路由有两部分，path(路径)，component(组件)
 const routes = [
-    { path: "/home", component: home },
-    { path: "/news", component : () => loadModule('./component/queue.vue',options) }
+    { path: "/", component : () => loadModule('./component/home.vue',options),name:'home'  },
+    { path: "/news", component : () => loadModule('./component/queue.vue',options),name:'news' }
 ];
 
 //vue3-sfc-loader v0.7.3
@@ -27,5 +23,6 @@ const options = {
 }
 const { loadModule } = window['vue2-sfc-loader'];
 var router = new VueRouter({
+    // html5模式 去掉锚点
     routes:routes
 })
