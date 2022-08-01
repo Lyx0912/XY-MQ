@@ -59,7 +59,8 @@ public class IndexController {
             //一般来说下载文件是使用201状态码的，但是IE浏览器不支持
             if (header.contains("MSIE") || header.contains("TRIDENT") || header.contains("EDGE")) {
                 fileName = URLEncoder.encode(fileName, "UTF-8");
-                fileName = fileName.replace("+", "%20");    // IE下载文件名空格变+号问题
+                // IE下载文件名空格变+号问题
+                fileName = fileName.replace("+", "%20");
                 status = HttpStatus.OK;
             }
         } catch (UnsupportedEncodingException e) {

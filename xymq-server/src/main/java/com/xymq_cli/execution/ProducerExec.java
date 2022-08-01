@@ -24,9 +24,11 @@ public class ProducerExec implements Execution{
     private XymqServer xymqServer;
     @Autowired
     private StorageHelper storageHelper;
+    private long queuetTotalCount = 0;
+    private long topicTotalCount = 0;
 
     /**
-     * 处理来自生产者推送的消息，根据消息对象的不同情况将消息存储到不同的消息容器中
+     * 处理来自生产者推送的消息，根据消息对象的不同情况将消息存储到不同的消息容器中,每当有对应的队列或主题有新消息推入就次数加一
      * @return void
      * @author 黎勇炫
      * @create 2022/7/10
@@ -37,8 +39,10 @@ public class ProducerExec implements Execution{
         // 先判断是队列消息还是主题消息，然后放入消息容器
         message.setMessageId(snowflakeIdUtils.nextId());
         if (message.getDestinationType() == Destination.QUEUE.getDestination()) {
+            queuetTotalCount++;
             execQueueMessage(message);
         } else {
+            topicTotalCount++;
             execTopicMessage(message);
         }
     }
@@ -75,6 +79,22 @@ public class ProducerExec implements Execution{
                 storageHelper.storeDelayTopicMessage(xymqServer.getDelayTopicContainer(), message);
             }
         }
+    }
+
+    public long getQueuetTotalCount() {
+        return queuetTotalCount;
+    }
+
+    public void setQueuetTotalCount(long queuetTotalCount) {
+        this.queuetTotalCount = queuetTotalCount;
+    }
+
+    public long getTopicTotalCount() {
+        return topicTotalCount;
+    }
+
+    public void setTopicTotalCount(long topicTotalCount) {
+        this.topicTotalCount = topicTotalCount;
     }
 
     /**

@@ -61,7 +61,7 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
         if(message != null){
             execListener(new MessageData(this,message.getContent()));
             if(isAutoAcknowledge){
-                ack(ctx.channel(), message.getMessageId(), message.getDestination());
+                ack(ctx.channel(), message.getMessageId(), message.getDestination(),message.getDestinationType());
             }
         }
     }
@@ -76,8 +76,8 @@ public class ConsumerHandler extends SimpleChannelInboundHandler<Protocol> {
      * @create 2022/7/11
      * @email 1677685900@qq.com
      */
-    private void ack(Channel channel, Long messageId, String destination) {
-        Message message = new Message(messageId, MessageType.ACK.getType(), null,destination, Destination.TOPIC.getDestination(),false,0,TimeUnit.MILLISECONDS);
+    private void ack(Channel channel, Long messageId, String destination,int destinationType) {
+        Message message = new Message(messageId, MessageType.ACK.getType(), null,destination, destinationType,false,0,null);
         byte[] content = JSON.toJSONString(message).getBytes(StandardCharsets.UTF_8);
         Protocol protocol = new Protocol(content.length,content);
         channel.writeAndFlush(protocol);

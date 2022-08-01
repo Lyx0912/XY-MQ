@@ -1,12 +1,10 @@
 package com.xymq_cli.core;
 
-import com.alibaba.fastjson.JSON;
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.ServerConstant;
+import com.xymq_cli.execution.AckExec;
 import com.xymq_common.message.Message;
 import com.xymq_common.protocol.MessageUtils;
-import com.xymq_common.protocol.Protocol;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -44,6 +42,8 @@ public class XymqServer {
     private LevelDb levelDb;
     @Autowired
     private ClientManager clientManager;
+    @Autowired
+    private AckExec ackExec;
 
     private Logger logger = LoggerFactory.getLogger(XymqServer.class);
 
@@ -486,6 +486,28 @@ public class XymqServer {
     @Scheduled(cron = "0/1 * * * * ? ")
     public void storeOfflineData() {
         clientManager.storeOfflineData(offLineTopicMessage, offLineSubscriber);
+    }
+
+    /**
+     * 获取未读的队列消息数量
+     * @return long 队列中未读消息的数量
+     * @author 黎勇炫
+     * @create 2022/8/1
+     * @email 1677685900@qq.com
+     */
+    public long getUnReadQueueMessageCount(){
+        long count = 0;
+        // 遍历容器，拿到每一个队列中的消息的数量(还没推送出去说明还没被消费)
+        for (Map.Entry<String, LinkedBlockingDeque<Message>> dequeEntry : this.queueContainer.entrySet()) {
+            count += dequeEntry.getValue().size();
+        }
+        return count;
+    }
+
+    @Scheduled(cron = "0/1 * * * * ? ")
+    public void test(){
+        System.out.println("未消费数量"+getUnReadQueueMessageCount());
+        System.out.println("消费成功"+ackExec.getQueueMessageCount());
     }
 
 }
