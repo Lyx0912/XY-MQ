@@ -504,10 +504,4 @@ public class XymqServer {
         return count;
     }
 
-    @Scheduled(cron = "0/1 * * * * ? ")
-    public void test(){
-        System.out.println("未消费数量"+getUnReadQueueMessageCount());
-        System.out.println("消费成功"+ackExec.getQueueMessageCount());
-    }
-
 }
