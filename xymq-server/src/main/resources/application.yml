@@ -5,6 +5,7 @@ leveldb:
 
 # 消息队列服务端口
 xymq:
+  wbsockport: 8687
   port: 8686
   backLog: 128
   storage:

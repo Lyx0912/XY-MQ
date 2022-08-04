@@ -25,7 +25,17 @@ export default {
   },
   methods:{
     initCharts(){
-      console.log("init")
+      var socket;
+      if(window.WebSocket){
+        // go on
+        socket = new WebSocket("ws://localhost:8687/connect");
+
+        socket.onmessage = function (ev){
+
+          console.log(ev.data)
+        }
+
+      }
       let qLinechar = this.$refs.qLinechar
       let qPiechar = this.$refs.qPiechar
       let tLinechar = this.$refs.tLinechar

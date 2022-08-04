@@ -3,7 +3,9 @@ package com.xymq_cli.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -17,7 +19,7 @@ public class ThreadConfig {
      /**
        * 核心线程池大小
        */
-    private int corePoolSize = 100;
+    private int corePoolSize = 75;
 
      /**
        * 最大可创建的线程数
@@ -45,6 +47,16 @@ public class ThreadConfig {
         // 线程池对拒绝任务(无线程可用)的处理策略
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return executor;
+    }
+
+     /**
+       * springboot定时任务线程
+       */
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(20);
+        return taskScheduler;
     }
 
     public int getCorePoolSize() {

@@ -85,17 +85,10 @@ public class ProducerExec implements Execution{
         return queuetTotalCount;
     }
 
-    public void setQueuetTotalCount(long queuetTotalCount) {
-        this.queuetTotalCount = queuetTotalCount;
-    }
-
     public long getTopicTotalCount() {
         return topicTotalCount;
     }
 
-    public void setTopicTotalCount(long topicTotalCount) {
-        this.topicTotalCount = topicTotalCount;
-    }
 
     /**
      * 返回当前策略支持的 消息 类型

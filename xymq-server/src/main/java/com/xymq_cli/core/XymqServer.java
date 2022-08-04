@@ -51,6 +51,10 @@ public class XymqServer {
      * 服务端口号
      */
     private int port;
+     /**
+       * 前端websocket端口号
+       */
+    private int wbsockport;
     /**
      * 服务端可连接队列
      */
@@ -115,15 +119,20 @@ public class XymqServer {
                 server.group(bossGroup, ioGroup)
                         .channel(NioServerSocketChannel.class)
                         .option(ChannelOption.SO_BACKLOG, backLog)
-                        .childOption(ChannelOption.SO_KEEPALIVE, true)
-                        .childHandler(new ServerInitializer());
+                        .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-                ChannelFuture sync = server.bind(port);
+                server.childHandler(new ServerInitializer());
+                Channel socketChannel = server.bind(port).sync().channel();
+
+                server.childHandler(new WebsocketInitializer());
+                Channel websocetChannel = server.bind(wbsockport).sync().channel();
+
                 // 数据恢复
                 recoveryMessage();
                 // 开始推送消息
                 satrt();
-                sync.channel().closeFuture().sync();
+                socketChannel.closeFuture().sync();
+                websocetChannel.closeFuture().sync();
             } catch (InterruptedException e) {
                 throw new RuntimeException("netty服务端启动失败");
             } finally {

@@ -17,4 +17,13 @@ public interface DataChartService {
      * @email 1677685900@qq.com
      */
     public Map<String,Object> queueData();
+
+    /**
+     * 更新数据
+     * @return void
+     * @author 黎勇炫
+     * @create 2022/8/4
+     * @email 1677685900@qq.com
+     */
+    public void updateData();
 }
