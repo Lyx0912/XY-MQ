@@ -17,25 +17,40 @@ export default {
   name: "home",
   data(){
     return {
-
+      // 队列消费成功
+      successQueueCount:[],
+      // 队列堆积情况
+      accQueueCount:[],
+      // 消息总数
+      queueTotal:[],
+      // 时间列表
+      time:[]
     }
   },
   mounted(){
+    this.initWebsocket();
     this.initCharts();
   },
   methods:{
     initCharts(){
+      axios.get("/xy/data/queue").then(Response=>{
+        this.setCharts(Response.data)
+      })
+    },
+    initWebsocket(){
       var socket;
+      var _this = this;
       if(window.WebSocket){
         // go on
         socket = new WebSocket("ws://localhost:8687/connect");
 
         socket.onmessage = function (ev){
-
-          console.log(ev.data)
+          var res = JSON.parse(ev.data)
+          _this.setCharts(res)
         }
-
       }
+    },
+    setCharts(data){
       let qLinechar = this.$refs.qLinechar
       let qPiechar = this.$refs.qPiechar
       let tLinechar = this.$refs.tLinechar
@@ -46,15 +61,19 @@ export default {
       var myChart3 = echarts.init(tLinechar);
       var myChart4 = echarts.init(tPiechar);
 
+      var queueAccDetail = [];
+      Object.keys(data.queueAccDetail).forEach(function (item){
+        queueAccDetail.push({name:item,value:data.queueAccDetail[item]})
+      })
       var option = {
         title: {
-          text: 'Stacked Line'
+          text: '队列容器'
         },
         tooltip: {
           trigger: 'axis'
         },
         legend: {
-          data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+          data: ['消息堆积','消费成功','消息总数']
         },
         grid: {
           left: '3%',
@@ -70,48 +89,36 @@ export default {
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          data: data.time
         },
         yAxis: {
           type: 'value'
         },
         series: [
           {
-            name: 'Email',
+            name: '消息堆积',
             type: 'line',
-            stack: 'Total',
-            data: [120, 132, 101, 134, 90, 230, 210]
+            stack: '消息堆积',
+            data: data.accQueueCount
           },
           {
-            name: 'Union Ads',
+            name: '消费成功',
             type: 'line',
-            stack: 'Total',
-            data: [220, 182, 191, 234, 290, 330, 310]
+            stack: '消费成功',
+            data: data.successQueueCount
           },
           {
-            name: 'Video Ads',
+            name: '消息总数',
             type: 'line',
-            stack: 'Total',
-            data: [150, 232, 201, 154, 190, 330, 410]
-          },
-          {
-            name: 'Direct',
-            type: 'line',
-            stack: 'Total',
-            data: [320, 332, 301, 334, 390, 330, 320]
-          },
-          {
-            name: 'Search Engine',
-            type: 'line',
-            stack: 'Total',
-            data: [820, 932, 901, 934, 1290, 1330, 1320]
+            stack: '消息总数',
+            data: data.queueTotal
           }
         ]
       };
       var option2 = {
         title: {
-          text: 'Referer of a Website',
-          subtext: 'Fake Data',
+          text: '堆积详情',
+          // subtext: 'Fake Data',
           left: 'center'
         },
         tooltip: {
@@ -126,13 +133,7 @@ export default {
             name: 'Access From',
             type: 'pie',
             radius: '50%',
-            data: [
-              { value: 1048, name: 'Search Engine' },
-              { value: 735, name: 'Direct' },
-              { value: 580, name: 'Email' },
-              { value: 484, name: 'Union Ads' },
-              { value: 300, name: 'Video Ads' }
-            ],
+            data: queueAccDetail,
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
@@ -241,7 +242,7 @@ export default {
         ]
       };
 
-      myChart.setOption(option);
+      myChart.setOption(option,true);
       myChart2.setOption(option2)
       myChart3.setOption(option3);
       myChart4.setOption(option4)

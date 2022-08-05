@@ -1,5 +1,6 @@
 package com.xymq_cli.web.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.xymq_cli.core.XymqServer;
 import com.xymq_cli.execution.AckExec;
 import com.xymq_cli.execution.ProducerExec;
@@ -132,6 +133,7 @@ public class DataChartServiceImpl implements DataChartService {
         data.put("successQueueCount",successQueueCount);
         data.put("accQueueCount",accQueueCount);
         data.put("queueTotal",queueTotal);
+        data.put("queueAccDetail",xymqServer.queueAccDetail());
         return data;
     }
 
@@ -153,8 +155,7 @@ public class DataChartServiceImpl implements DataChartService {
     @Async
     @Scheduled(cron = "0/5 * * * * ?")
     public void updateData(){
-        // 如果索引值已经
-        if(counter.intValue() == 6){
+        if(counter.intValue() == 12){
             resetData();
         }else {
             add();
@@ -167,7 +168,7 @@ public class DataChartServiceImpl implements DataChartService {
                 iterator.remove();
                 return;
             }
-            channel.writeAndFlush(new TextWebSocketFrame(queueData().toString()));
+            channel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(queueData())));
         }
     }
 }

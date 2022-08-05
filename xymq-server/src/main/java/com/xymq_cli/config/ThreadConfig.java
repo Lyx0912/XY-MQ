@@ -19,7 +19,7 @@ public class ThreadConfig {
      /**
        * 核心线程池大小
        */
-    private int corePoolSize = 75;
+    private int corePoolSize = 65;
 
      /**
        * 最大可创建的线程数
@@ -55,7 +55,7 @@ public class ThreadConfig {
     @Bean
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setPoolSize(20);
+        taskScheduler.setPoolSize(10);
         return taskScheduler;
     }
 

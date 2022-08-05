@@ -1,5 +1,6 @@
 package com.xymq_cli.web.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.xymq_cli.web.service.DataChartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,7 @@ public class DataController {
     private DataChartService dataChartService;
 
     @GetMapping("/queue")
-    public Map<String,Object> queueCharts(){
-        return dataChartService.queueData();
+    public String queueCharts(){
+        return JSON.toJSONString(dataChartService.queueData());
     }
 }
