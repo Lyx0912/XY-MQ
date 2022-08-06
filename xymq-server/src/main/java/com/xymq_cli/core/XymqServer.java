@@ -7,7 +7,6 @@ import com.xymq_common.message.Message;
 import com.xymq_common.protocol.MessageUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -22,9 +21,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author 黎勇炫
@@ -46,6 +48,11 @@ public class XymqServer {
     private AckExec ackExec;
 
     private Logger logger = LoggerFactory.getLogger(XymqServer.class);
+
+     /**
+       * 记录主题消息推送成功的消息数量
+       */
+    private LongAdder topicSuccess = new LongAdder();
 
     /**
      * 服务端口号
@@ -275,7 +282,7 @@ public class XymqServer {
                                 // 根据目的地取出指定map。key为订阅者id，value为订阅者的channel
                                 HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
                                 // 遍历整个订阅者容器，向每一个订阅者推送消息
-                                putTopicMessage(key, message, subscribers);
+                                pushTopicMessage(key, message, subscribers);
                                 // 推送完从leveldb中删除消息
                                 levelDb.deleteMessageBean(message.getMessageId());
                             }
@@ -307,7 +314,7 @@ public class XymqServer {
                             if (!CollectionUtils.isEmpty(subscriberContainer.get(key))) {
                                 Message message = delayTopic.take();
                                 HashMap<Long, Channel> subscribers = subscriberContainer.get(message.getDestination());
-                                putTopicMessage(key, message, subscribers);
+                                pushTopicMessage(key, message, subscribers);
                             }
 
                         }
@@ -347,6 +354,7 @@ public class XymqServer {
                                 Message message = iterator.next();
                                 channel.writeAndFlush(MessageUtils.message2Protocol(message));
                                 iterator.remove();
+                                topicSuccess.increment();
                             }
                             // 消息推送完后重写把客户端放回在线的容器
                             if (subscriberContainer.containsKey(destination)) {
@@ -373,12 +381,13 @@ public class XymqServer {
      * @create 2022/7/24
      * @email 1677685900@qq.com
      */
-    private void putTopicMessage(String key, Message message, HashMap<Long, Channel> subscribers) {
+    private void pushTopicMessage(String key, Message message, HashMap<Long, Channel> subscribers) {
         for (Map.Entry<Long, Channel> channelEntry : subscribers.entrySet()) {
             Long clientId = channelEntry.getKey();
             Channel subscriber = channelEntry.getValue();
             if (subscriber.isActive()) {
                 subscriber.writeAndFlush(MessageUtils.message2Protocol(message));
+                topicSuccess.increment();
             } else {
                 storeOfflineData(key, message, clientId, subscriber);
             }
@@ -505,9 +514,48 @@ public class XymqServer {
      * @email 1677685900@qq.com
      */
     public long getUnReadQueueMessageCount(){
+        return getCountFromContainer(this.queueContainer);
+    }
+
+    /**
+     * 获取未读的主题消息数量
+     * @return java.lang.Long
+     * @author 黎勇炫
+     * @create 2022/8/6
+     * @email 1677685900@qq.com
+     */
+    public Long getUnReadTopicMessageCount(){
+        return getCountFromContainer(this.topicContainer);
+    }
+
+    /**
+     * 获取主题消息中推送失败的消息数量
+     * @return java.lang.Long
+     * @author 黎勇炫
+     * @create 2022/8/6
+     * @email 1677685900@qq.com
+     */
+    public Long getOffLineTopicMessageCount(){
         long count = 0;
         // 遍历容器，拿到每一个队列中的消息的数量(还没推送出去说明还没被消费)
-        for (Map.Entry<String, LinkedBlockingDeque<Message>> dequeEntry : this.queueContainer.entrySet()) {
+        for (Map.Entry<Long, ArrayList<Message>> offLineTopicEntry : offLineTopicMessage.entrySet()) {
+            count += offLineTopicEntry.getValue().size();
+        }
+        return count;
+    }
+
+    /**
+     * 遍历容器拿到各容器消息数量
+     * @param topicContainer
+     * @return java.lang.Long
+     * @author 黎勇炫
+     * @create 2022/8/6
+     * @email 1677685900@qq.com
+     */
+    private Long getCountFromContainer(ConcurrentHashMap<String, LinkedBlockingDeque<Message>> topicContainer) {
+        long count = 0;
+        // 遍历容器，拿到每一个队列中的消息的数量(还没推送出去说明还没被消费)
+        for (Map.Entry<String, LinkedBlockingDeque<Message>> dequeEntry : topicContainer.entrySet()) {
             count += dequeEntry.getValue().size();
         }
         return count;
@@ -551,4 +599,14 @@ public class XymqServer {
         return map;
     }
 
+    /**
+     * 推送成功的主题消息数
+     * @return java.lang.Long
+     * @author 黎勇炫
+     * @create 2022/8/6
+     * @email 1677685900@qq.com
+     */
+    public Long topicSuccessCount(){
+        return topicSuccess.longValue();
+    }
 }

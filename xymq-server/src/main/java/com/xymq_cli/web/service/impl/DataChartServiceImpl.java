@@ -5,7 +5,6 @@ import com.xymq_cli.core.XymqServer;
 import com.xymq_cli.execution.AckExec;
 import com.xymq_cli.execution.ProducerExec;
 import com.xymq_cli.web.service.DataChartService;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -29,18 +27,7 @@ public class DataChartServiceImpl implements DataChartService {
     private ProducerExec producerExec;
     private AckExec ackExec;
     private XymqServer xymqServer;
-     /**
-       * websocket客户端容器
-       */
-    private static List<Channel> channels = new ArrayList<>();
-     /**
-       * 计数器
-       */
-    private LongAdder counter = new LongAdder();
-    /**
-       * 时间数组
-       */
-    private List<String> timeList = new ArrayList<>();
+
      /**
        * 消费成功数量
        */
@@ -50,13 +37,43 @@ public class DataChartServiceImpl implements DataChartService {
        */
     private List<Long> accQueueCount = new ArrayList<>();
      /**
-       * 总数量
+       * 队列消息总数量
        */
     private List<Long> queueTotal = new ArrayList<>();
+    //--------------------------------主题消息----------------------------------------//
+    /**
+     * 消费成功数量
+     */
+    private List<Long> successTopicCount = new ArrayList<>();
+    /**
+     * 离线消息数量
+     */
+    private List<Long> offLineCount = new ArrayList<>();
+    /**
+     * 主题消息堆积情况
+     */
+    private List<Long> accTopicCount = new ArrayList<>();
+    /**
+     * 主题消息总数量
+     */
+    private List<Long> topicTotal = new ArrayList<>();
+
      /**
        * 返回结果的map
        */
     private Map<String,Object> data = new HashMap<>();
+    /**
+     * 时间数组
+     */
+    private List<String> timeList = new ArrayList<>();
+    /**
+     * 计数器
+     */
+    private LongAdder counter = new LongAdder();
+    /**
+     * websocket客户端容器
+     */
+    private static List<Channel> channels = new ArrayList<>();
 
     @Autowired
     public DataChartServiceImpl(ProducerExec producerExec, AckExec ackExec, XymqServer xymqServer) {
@@ -101,9 +118,17 @@ public class DataChartServiceImpl implements DataChartService {
      */
     private void add() {
         timeList.add(LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")));
+        // 队列消息
         successQueueCount.add(ackExec.getQueueMessageCount());
         queueTotal.add(producerExec.getQueuetTotalCount());
         accQueueCount.add(xymqServer.getUnReadQueueMessageCount());
+        // 主题消息
+        successTopicCount.add(xymqServer.topicSuccessCount());
+        offLineCount.add(xymqServer.getOffLineTopicMessageCount());
+        accTopicCount.add(xymqServer.getUnReadTopicMessageCount());
+        topicTotal.add(producerExec.getTopicTotalCount());
+
+
     }
 
     /**
@@ -134,6 +159,10 @@ public class DataChartServiceImpl implements DataChartService {
         data.put("accQueueCount",accQueueCount);
         data.put("queueTotal",queueTotal);
         data.put("queueAccDetail",xymqServer.queueAccDetail());
+        data.put("successTopicCount",successTopicCount);
+        data.put("accTopicCount",accTopicCount);
+        data.put("topicTotal",topicTotal);
+        data.put("offLineCount",offLineCount);
         return data;
     }
 

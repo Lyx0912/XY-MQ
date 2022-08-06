@@ -152,7 +152,7 @@ export default {
           trigger: 'axis'
         },
         legend: {
-          data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+          data: ['离线消息', '推送失败', '推送成功', '消息总数']
         },
         grid: {
           left: '3%',
@@ -168,41 +168,35 @@ export default {
         xAxis: {
           type: 'category',
           boundaryGap: false,
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          data: data.time
         },
         yAxis: {
           type: 'value'
         },
         series: [
           {
-            name: 'Email',
+            name: '离线消息',
             type: 'line',
-            stack: 'Total',
-            data: [120, 132, 101, 134, 90, 230, 210]
+            stack: '离线消息',
+            data: data.offLineCount
           },
           {
-            name: 'Union Ads',
+            name: '推送失败',
             type: 'line',
-            stack: 'Total',
-            data: [220, 182, 191, 234, 290, 330, 310]
+            stack: '推送失败',
+            data: data.accTopicCount
           },
           {
-            name: 'Video Ads',
+            name: '推送成功',
             type: 'line',
-            stack: 'Total',
-            data: [150, 232, 201, 154, 190, 330, 410]
+            stack: '推送成功',
+            data: data.successTopicCount
           },
           {
-            name: 'Direct',
+            name: '消息总数',
             type: 'line',
-            stack: 'Total',
-            data: [320, 332, 301, 334, 390, 330, 320]
-          },
-          {
-            name: 'Search Engine',
-            type: 'line',
-            stack: 'Total',
-            data: [820, 932, 901, 934, 1290, 1330, 1320]
+            stack: '消息总数',
+            data: data.topicTotal
           }
         ]
       };
