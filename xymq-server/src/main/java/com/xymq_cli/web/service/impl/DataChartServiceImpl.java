@@ -75,6 +75,13 @@ public class DataChartServiceImpl implements DataChartService {
      */
     private static List<Channel> channels = new ArrayList<>();
 
+    /**
+     * 添加客户端
+     */
+    public static void putChannel(Channel channel){
+        channels.add(channel);
+    }
+
     @Autowired
     public DataChartServiceImpl(ProducerExec producerExec, AckExec ackExec, XymqServer xymqServer) {
         this.producerExec = producerExec;
@@ -163,14 +170,8 @@ public class DataChartServiceImpl implements DataChartService {
         data.put("accTopicCount",accTopicCount);
         data.put("topicTotal",topicTotal);
         data.put("offLineCount",offLineCount);
+        data.put("topicAccDetail",xymqServer.topicAccDetail());
         return data;
-    }
-
-     /**
-       * 添加客户端
-       */
-    public static void putChannel(Channel channel){
-        channels.add(channel);
     }
 
     /**

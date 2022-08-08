@@ -15,6 +15,9 @@ public class XyTextWebSocketFrameHandler extends SimpleChannelInboundHandler<Tex
 
     }
 
+     /**
+       * 当有新的连接加入时就将channel添加到指定容器
+       */
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         DataChartServiceImpl.putChannel(ctx.channel());

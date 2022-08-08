@@ -562,17 +562,39 @@ public class XymqServer {
     }
 
     /**
-     * 获取队列堆积情况
+     * 返回队列消息容器的堆积情况
+     * @return java.util.Map<java.lang.String,java.lang.Long>
+     * @author 黎勇炫
+     * @create 2022/8/8
+     * @email 1677685900@qq.com
+     */
+    public Map<String,Long> queueAccDetail(){
+        return containerAccDetail(queueContainer);
+    }
+
+    /**
+     * 返回主题消息容器的堆积情况
+     * @return java.util.Map<java.lang.String,java.lang.Long>
+     * @author 黎勇炫
+     * @create 2022/8/8
+     * @email 1677685900@qq.com
+     */
+    public Map<String,Long> topicAccDetail(){
+        return containerAccDetail(topicContainer);
+    }
+
+    /**
+     * 获取指定容器中消息的堆积情况
      * @return java.util.Map<java.lang.String,java.lang.Long>
      * @author 黎勇炫
      * @create 2022/8/5
      * @email 1677685900@qq.com
      */
-    public Map<String,Long> queueAccDetail(){
+    public Map<String,Long> containerAccDetail(Map<String,LinkedBlockingDeque<Message>> param){
         // 遍历每个队列容器，拿到每个队列的消息堆积情况
         Map<String,Long> map = new HashMap<>();
-        for (String queue : this.queueContainer.keySet()) {
-            map.put(queue, (long) queueContainer.get(queue).size());
+        for (String queue : param.keySet()) {
+            map.put(queue, (long) param.get(queue).size());
         }
         // 如果队列太多了用扇形图展示不好看，容器>6就将少的部分合并为‘其他’
         if(map.size()>6){

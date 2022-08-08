@@ -32,11 +32,6 @@ export default {
     this.initCharts();
   },
   methods:{
-    initCharts(){
-      axios.get("/xy/data/queue").then(Response=>{
-        this.setCharts(Response.data)
-      })
-    },
     initWebsocket(){
       var socket;
       var _this = this;
@@ -49,6 +44,11 @@ export default {
           _this.setCharts(res)
         }
       }
+    },
+    initCharts(){
+      axios.get("/xy/data/queue").then(Response=>{
+        this.setCharts(Response.data)
+      })
     },
     setCharts(data){
       let qLinechar = this.$refs.qLinechar
@@ -65,6 +65,11 @@ export default {
       Object.keys(data.queueAccDetail).forEach(function (item){
         queueAccDetail.push({name:item,value:data.queueAccDetail[item]})
       })
+      var topicAccDetail = [];
+      Object.keys(data.topicAccDetail).forEach(function (item){
+        topicAccDetail.push({name:item,value:data.topicAccDetail[item]})
+      })
+
       var option = {
         title: {
           text: '队列容器'
@@ -130,7 +135,7 @@ export default {
         },
         series: [
           {
-            name: 'Access From',
+            name: '暂无数据',
             type: 'pie',
             radius: '50%',
             data: queueAccDetail,
@@ -146,7 +151,7 @@ export default {
       };
       var option3 = {
         title: {
-          text: 'Stacked Line'
+          text: '主题容器'
         },
         tooltip: {
           trigger: 'axis'
@@ -202,8 +207,7 @@ export default {
       };
       var option4 = {
         title: {
-          text: 'Referer of a Website',
-          subtext: 'Fake Data',
+          text: '堆积详情',
           left: 'center'
         },
         tooltip: {
@@ -215,16 +219,10 @@ export default {
         },
         series: [
           {
-            name: 'Access From',
+            name: '暂无数据',
             type: 'pie',
             radius: '50%',
-            data: [
-              { value: 1048, name: 'Search Engine' },
-              { value: 735, name: 'Direct' },
-              { value: 580, name: 'Email' },
-              { value: 484, name: 'Union Ads' },
-              { value: 300, name: 'Video Ads' }
-            ],
+            data: topicAccDetail,
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
