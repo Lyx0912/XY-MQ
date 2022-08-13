@@ -1,5 +1,8 @@
 package com.xymq_cli.web.service;
 
+import com.xymq_cli.web.domain.QueueVO;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,4 +29,6 @@ public interface DataChartService {
      * @email 1677685900@qq.com
      */
     public void updateData();
+
+    public List<QueueVO> queueDetail();
 }

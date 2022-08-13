@@ -3,6 +3,7 @@ package com.xymq_cli.core;
 import com.xymq_cli.constant.Destination;
 import com.xymq_cli.constant.ServerConstant;
 import com.xymq_cli.execution.AckExec;
+import com.xymq_cli.web.domain.QueueVO;
 import com.xymq_common.message.Message;
 import com.xymq_common.protocol.MessageUtils;
 import io.netty.bootstrap.ServerBootstrap;
@@ -630,5 +631,38 @@ public class XymqServer {
      */
     public Long topicSuccessCount(){
         return topicSuccess.longValue();
+    }
+
+    /**
+     * 获取队列详情
+     * @return java.util.List<com.xymq_cli.web.domain.QueueVO>
+     * @author 黎勇炫
+     * @create 2022/8/13
+     * @email 1677685900@qq.com
+     */
+    public List<QueueVO> queueDetails(){
+        List<QueueVO> l = new ArrayList<>();
+        // 遍历队列消息容器
+        for (String key : queueContainer.keySet()) {
+            QueueVO vo = new QueueVO();
+            // key为队列名
+            vo.setQueueName(key);
+            // 未消费数量
+            if(delayQueueContainer.containsKey(key)){
+                Integer delayCount = delayQueueContainer.get(key).size();
+                vo.setUnConsume((long) (queueContainer.get(key).size()+delayQueueContainer.get(key).size()));
+                vo.setDelayCount((long)delayCount);
+            }else{
+                vo.setUnConsume((long) queueContainer.get(key).size());
+            }
+            // 该队列的消费者
+            if(consumerContainer.containsKey(key)){
+                vo.setConsumerCount(consumerContainer.get(key).size());
+            }else{
+                vo.setConsumerCount(0);
+            }
+            l.add(vo);
+        }
+        return l;
     }
 }

@@ -1,31 +1,25 @@
 <template>
   <div style="margin-top: 20px">
     <el-table
-        :data="tableData"
+        :data="queueList"
         style="width: 100%">
       <el-table-column
-          fixed
-          prop="date"
-          label="序号"
-          width="50">
-      </el-table-column>
-      <el-table-column
-          prop="name"
+          prop="queueName"
           label="队列名">
       </el-table-column>
       <el-table-column
-          prop="province"
+          prop="consumerCount"
           label="消费者数量"
           width="200">
       </el-table-column>
       <el-table-column
-          prop="city"
-          label="队列类型"
-          width="120">
+          prop="delayCount"
+          label="延时消息"
+          width="100">
       </el-table-column>
       <el-table-column
-          prop="address"
-          label="消息数"
+          prop="unConsume"
+          label="待消费"
           width="100">
       </el-table-column>
       <el-table-column
@@ -46,43 +40,17 @@ export default {
   name: "index",
   data(){
     return{
-      tableData: [{
-        date: '1',
-        name: '王小虎',
-        province: '上海',
-        city: '普陀区',
-        address: '上海市普陀区金沙江路 1518 弄',
-        zip: 200333
-      }, {
-        date: '1',
-        name: '王小虎',
-        province: '上海',
-        city: '普陀区',
-        address: '上海市普陀区金沙江路 1517 弄',
-        zip: 200333
-      }, {
-        date: '1',
-        name: '王小虎',
-        province: '上海',
-        city: '普陀区',
-        address: '上海市普陀区金沙江路 1519 弄',
-        zip: 200333
-      }, {
-        date: '1',
-        name: '王小虎',
-        province: '上海',
-        city: '普陀区',
-        address: '上海市普陀区金沙江路 1516 弄',
-        zip: 200333
-      }]
+      queueList:[]
     }
   },
   created() {
-
+    this.getList();
   },
   methods: {
-    handleClick(row) {
-      console.log(row);
+    getList(){
+      axios.get("/xy/data/list").then(Response=>{
+        this.queueList = Response.data
+      })
     }
   },
 

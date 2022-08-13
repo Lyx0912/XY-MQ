@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.xymq_cli.core.XymqServer;
 import com.xymq_cli.execution.AckExec;
 import com.xymq_cli.execution.ProducerExec;
+import com.xymq_cli.web.domain.QueueVO;
 import com.xymq_cli.web.service.DataChartService;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -200,5 +201,10 @@ public class DataChartServiceImpl implements DataChartService {
             }
             channel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(queueData())));
         }
+    }
+
+    @Override
+    public List<QueueVO> queueDetail() {
+        return xymqServer.queueDetails();
     }
 }

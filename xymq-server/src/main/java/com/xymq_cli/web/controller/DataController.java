@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 /**
  * @author 黎勇炫
  * @date 2022年08月01日 22:15
@@ -23,5 +21,10 @@ public class DataController {
     @GetMapping("/queue")
     public String queueCharts(){
         return JSON.toJSONString(dataChartService.queueData());
+    }
+
+    @GetMapping("/list")
+    public String queueDetail(){
+        return JSON.toJSONString(dataChartService.queueDetail());
     }
 }

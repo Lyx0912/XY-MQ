@@ -9,8 +9,20 @@ import lombok.Data;
 @Data
 public class QueueVO {
 
+     /**
+       * 队列名称
+       */
     private String queueName;
-    private String type;
-    private Integer consumerCount;
-    private String unConsume;
+     /**
+       * 客户端数量
+       */
+    private Integer consumerCount = 0;
+     /**
+       * 消息堆积数量
+       */
+    private Long unConsume = 0L;
+     /**
+       * 延时消息数量
+       */
+    private Long delayCount = 0L;
 }
