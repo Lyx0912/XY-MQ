@@ -18,6 +18,13 @@ public class DataController {
     @Autowired
     private DataChartService dataChartService;
 
+    /**
+     * 可视化图表-队列数据概览接口
+     * @return java.lang.String
+     * @author 黎勇炫
+     * @create 2022/8/14
+     * @email 1677685900@qq.com
+     */
     @GetMapping("/queue")
     public String queueCharts(){
         return JSON.toJSONString(dataChartService.queueData());
