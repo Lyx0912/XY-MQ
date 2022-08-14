@@ -23,6 +23,13 @@ public class DataController {
         return JSON.toJSONString(dataChartService.queueData());
     }
 
+    /**
+     * 获取队列详情列表
+     * @return java.lang.String
+     * @author 黎勇炫
+     * @create 2022/8/14
+     * @email 1677685900@qq.com
+     */
     @GetMapping("/list")
     public String queueDetail(){
         return JSON.toJSONString(dataChartService.queueDetail());
