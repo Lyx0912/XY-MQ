@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 /*
+ * 启动类
  * @author 黎勇炫
  * @create 2022/7/9
  * @email 1677685900@qq.com
