@@ -9,6 +9,10 @@
 
 ![image-20220722143333879](https://github.com/Lyx0912/XY-MQ/blob/main/doc/%E6%B6%88%E6%81%AF%E6%8C%81%E4%B9%85%E5%8C%96%E6%A8%A1%E5%9E%8B.png)
 
+可视化面板
+
+![image-20220722143333880](https://github.com/Lyx0912/XY-MQ/blob/main/doc/%E5%8F%AF%E8%A7%86%E5%8C%96%E9%9D%A2%E6%9D%BF.jpg)
+
 
 
 ### 优点
