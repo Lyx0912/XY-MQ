@@ -173,8 +173,8 @@ public class Producer {
         Producer producer = new Producer();
 //        producer.publishDelayTopicMessage("你好，延时30s","topic",30,TimeUnit.SECONDS);
         // 推送普通的队列消息
-        for (int i = 0; i < 10; i++) {
-            producer.sendMsg("你好，我是队列消息"+i,"queue2");
+        for (int i = 0; i < 150000; i++) {
+            producer.sendMsg("你好，我是队列消息"+i,"queue3");
         }
 //        Thread.sleep(300);
         // 推送主题消息
